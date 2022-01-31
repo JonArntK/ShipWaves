@@ -1,0 +1,144 @@
+#pragma kernel ComputeWaterSurfaceKernel
+
+#include "ComputeElevationGlobal.hlsl"
+
+#define GROUP_SIZE_X 64
+#define GROUP_SIZE_Y 1
+#define GROUP_SIZE_Z 1
+
+
+// Define buffers for storing vertices, normals and texture coordiantes of the mesh.
+RWByteAddressBuffer _VertexBuffer;
+RWByteAddressBuffer _NormalBuffer;
+RWByteAddressBuffer _TexcoordBuffer;
+
+// Other definitions.
+int _QuadCount, _XQuadCount, _ZQuadCount, _XOrigin, _ZOrigin;
+float _Time, _XStep, _ZStep;
+
+StructuredBuffer<float3> _VesselCoord;
+int _VesselNx, _VesselNy;
+
+StructuredBuffer<float4> _VesselPath;
+int _VesselPathNumPoints;
+
+// Create a Vertex struct for simplicity.
+struct Vertex
+{
+    float3 position;
+    float2 texcoord;
+};
+ 
+// Custom Store2 funciton -> enabling storage of float2.
+void Store2 (RWByteAddressBuffer buffer, int index, float2 v)
+{
+    uint2 data = asuint(v);     // Convert to uint2 from float. 
+    buffer.Store2((index * 3) << 2, data);    // Insert two positions left of index * 3.
+}
+ 
+// Custom Store3 funciton -> enabling storage of float3.
+void Store3 (RWByteAddressBuffer buffer, int index, float3 v)
+{
+    uint3 data = asuint(v);     // Convert to uint3 from float. 
+    buffer.Store3((index * 3) << 2, data);    // Insert two positions left of index * 3.
+}
+ 
+Vertex GenerateQuad (uint id) // generate vertex for grid of quads, from 1D array index (branchless version)
+{
+    float instance = floor(float(id + 0.00001) / 6.0); // Index of current quad.
+    float3 center = float3(floor(Mod(instance, _XQuadCount)), 0.0, floor(instance / _XQuadCount)); // Center of current quad.
+
+    Vertex vertex;
+    float u = Mod(float(id), 2.0);                          // Local x-position of quad.
+    float v = sign(Mod(126.0, Mod(float(id), 6.0) + 6.0));  // Local z-position of quad.
+    float3 localPos = float3(u, 0, v);
+
+    vertex.position = (localPos + center) * float3(_XStep, 1, _ZStep) + float3(_XOrigin, 0, _ZOrigin);  // Assigning position to vertex.
+
+    //float elevation = ComputeElevationSin(vertex.position.x, vertex.position.z, _Time); // Computing elevation using the global position.
+    //float elevation = ComputeShipWaveElevationLocal(vertex.position.x, vertex.position.z, _VesselCoord, _VesselNx, _VesselNy);
+    float elevation = ComputeShipWaveElevationGlobal(vertex.position.x, vertex.position.z, _VesselCoord, _VesselNx, _VesselNy, _VesselPath, _VesselPathNumPoints);
+    vertex.position.y = elevation;
+
+    vertex.texcoord = float2(u, v);
+    return vertex;
+}
+ 
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
+void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
+{
+    uint id = threadID.x + threadID.y * GROUP_SIZE_X;
+    if ((int)id >= _QuadCount) return;
+    uint idx1 = id * 6;
+    uint idx2 = id * 6 + 1;
+    uint idx3 = id * 6 + 2;  
+    uint idx4 = id * 6 + 3;  
+    uint idx5 = id * 6 + 4;  
+    uint idx6 = id * 6 + 5;  
+
+    Vertex v1 = GenerateQuad(idx1);
+    Vertex v2 = GenerateQuad(idx2);
+    Vertex v3 = GenerateQuad(idx3);  
+    //Vertex v4 = GenerateQuad(idx4);
+    //Vertex v5 = GenerateQuad(idx5);
+    Vertex v6 = GenerateQuad(idx6); 
+
+    // ----- Triangluar mesh from quads -----
+    //    p3, p5        p6
+    //       ___________
+    //      |\          |
+    //      |  \        |
+    //      |    \      |
+    //      |      \    |
+    //      |        \  |
+    //      |__________\|
+    //     p1           p2, p4
+    //
+    // Hence triangles are made as (p1, p2, p3) and (p4, p5, p6),
+    // which is equivalent to      (p1, p2, p3) and (p2, p3, p6),
+    // avoiding the computation of p4 and p5.
+
+    float3 p1 = v1.position;
+    float3 p2 = v2.position;
+    float3 p3 = v3.position;
+    //float3 p4 = v4.position;
+    //float3 p5 = v5.position;
+    float3 p6 = v6.position;
+
+    float2 uv1 = v1.texcoord;
+    float2 uv2 = v2.texcoord;
+    float2 uv3 = v3.texcoord;
+    //float2 uv4 = v4.texcoord;
+    //float2 uv5 = v5.texcoord;
+    float2 uv6 = v6.texcoord;
+
+    float3 normal = -normalize(cross(p2 - p1, p3 - p2));  
+    float3 normal2 = normalize(cross(p3 - p2, p6 - p3));  
+
+
+    Store3(_VertexBuffer, idx1, p1);
+    Store3(_VertexBuffer, idx2, p3);
+    Store3(_VertexBuffer, idx3, p2);
+
+    Store3(_VertexBuffer, idx4, p2);
+    Store3(_VertexBuffer, idx5, p3);
+    Store3(_VertexBuffer, idx6, p6);
+
+
+    Store2(_TexcoordBuffer, idx1, uv1);
+    Store2(_TexcoordBuffer, idx2, uv3);
+    Store2(_TexcoordBuffer, idx3, uv2);     
+
+    Store2(_TexcoordBuffer, idx4, uv2);
+    Store2(_TexcoordBuffer, idx5, uv3);
+    Store2(_TexcoordBuffer, idx6, uv6); 
+
+
+    Store3(_NormalBuffer, idx1, normal);
+    Store3(_NormalBuffer, idx2, normal);
+    Store3(_NormalBuffer, idx3, normal);  
+
+    Store3(_NormalBuffer, idx4, normal2);
+    Store3(_NormalBuffer, idx5, normal2);
+    Store3(_NormalBuffer, idx6, normal2);
+}
