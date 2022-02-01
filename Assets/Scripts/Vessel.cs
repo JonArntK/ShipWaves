@@ -10,7 +10,7 @@ public class Vessel : MonoBehaviour
     private float L, B, D;
     private int Nx, Nz;
 
-    public float dx, dz, U;
+    public float dx, dz, U = 0;
 
     private float3[] vesselCoord;
 
@@ -33,16 +33,21 @@ public class Vessel : MonoBehaviour
 
     private void Update()
     {
+        // Accelerate when pressing up or down arrow.
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            this.transform.Translate(Vector3.forward * Time.deltaTime * Mathf.Sqrt(9.81f));
+            U += 1f * Time.deltaTime;
         }
 
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            this.transform.Translate(Vector3.back * Time.deltaTime * Mathf.Sqrt(9.81f));
+            U -= 1f * Time.deltaTime;
         }
 
+        // Move.
+        this.transform.Translate(new Vector3(1, 0, 0) * Time.deltaTime * U);
+
+        // Rotate when pressing left or right arrow.
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             this.transform.Rotate(Vector3.up, -1);
@@ -145,15 +150,15 @@ public class Vessel : MonoBehaviour
     }
     public void UpdateVesselPath()
     {
-        float U = Mathf.Sqrt(9.81f);
         //float4 newPoint = new float4(-70 + Time.time * U, 0f, Time.time, 0f);
-        float angle = transform.rotation.eulerAngles.y;// * 2f * Mathf.PI / 360f + Mathf.PI / 2f;
-        float4 newPoint = new float4(transform.position.x, transform.position.z, Time.time, (-angle + 90f) * 2f * Mathf.PI / 360f);
+        float angle = transform.rotation.eulerAngles.y;
+        float4 newPoint = new float4(transform.position.x, transform.position.z, Time.time, -angle * 2f * Mathf.PI / 360f);
         vesselPathQueue.Enqueue(newPoint);
 
         if (vesselPathQueue.Count >= 1200)
         {
             vesselPathQueue.Dequeue();
         }
+        Debug.Log(angle);
     }
 }
