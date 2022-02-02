@@ -8,9 +8,10 @@ public class Vessel : MonoBehaviour
 {
     // Vessel characteristics
     private float L, B, D;
-    private int Nx, Nz;
+    private float dx, dz;
 
-    public float dx, dz, U = 0;
+    public int Nx, Nz;
+    public float U = 0;
 
     private float3[] vesselCoord;
 
@@ -68,10 +69,6 @@ public class Vessel : MonoBehaviour
     private void CreateVesselCoord()
     {
         // According to Wigley parabolic hull.
-
-        // Number of points in x- and z-direction.
-        Nx = Mathf.FloorToInt(L / dx) + 1;
-        Nz = Mathf.FloorToInt(D / dz) + 1;
 
         // Update dx and dz.
         dx = L / (Nx - 1);
