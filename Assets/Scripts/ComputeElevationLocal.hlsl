@@ -2,10 +2,12 @@
 
 #define KELVIN_ANGLE 0.3398369095
 
-float2 ComplexAmplitudeFunction(StructuredBuffer<float3> _VesselCoord, int _VesselNx, int _VesselNy, float theta, float U)
+float2 ComplexAmplitudeFunction(int vesselNum, StructuredBuffer <float3>_VesselCoord, int _VesselNx, int _VesselNy, float theta, float U)
 {
-    float dx = _VesselCoord[_VesselNy].x - _VesselCoord[0].x;
-    float dy = _VesselCoord[1].y - _VesselCoord[0].y;
+    int vesselCoordIndexStart = vesselNum * _VesselNx * _VesselNy;
+
+    float dx = _VesselCoord[vesselCoordIndexStart + _VesselNy].x - _VesselCoord[vesselCoordIndexStart + 0].x;
+    float dy = _VesselCoord[vesselCoordIndexStart + 1].y - _VesselCoord[vesselCoordIndexStart + 0].y;
     
     float P = 0.0;
     float Q = 0.0;
@@ -24,8 +26,8 @@ float2 ComplexAmplitudeFunction(StructuredBuffer<float3> _VesselCoord, int _Vess
     for (int i = 0; i < _VesselNx; i++)
     {
         float F = 0.0;
-        F += omega0 * _VesselCoord[i * _VesselNy + 0].z * exp(k0 * _VesselCoord[i * _VesselNy + 0].y / pow(cos(theta), 2.0)) * dy;
-        F += omegaNy * _VesselCoord[i * _VesselNy + _VesselNy - 1].z * exp(k0 * _VesselCoord[i * _VesselNy + _VesselNy - 1].y / pow(cos(theta), 2.0)) * dy;
+        F += omega0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy + 0].z * exp(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy + 0].y / pow(cos(theta), 2.0)) * dy;
+        F += omegaNy * _VesselCoord[vesselCoordIndexStart + i * _VesselNy + _VesselNy - 1].z * exp(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy + _VesselNy - 1].y / pow(cos(theta), 2.0)) * dy;
         for (int j = 1; j < _VesselNy - 1; j++)
         {
             F += omegaJ * _VesselCoord[i * _VesselNy + j].z * exp(k0 * _VesselCoord[i * _VesselNy + j].y / pow(cos(theta), 2.0)) * dy;
@@ -33,13 +35,13 @@ float2 ComplexAmplitudeFunction(StructuredBuffer<float3> _VesselCoord, int _Vess
         
         if (Mod(i, 2) == 0.0)
         {
-            P += omegaEven * F * cos(k0 * _VesselCoord[i * _VesselNy].x / cos(theta)) * dx;
-            Q += omegaEven * F * sin(k0 * _VesselCoord[i * _VesselNy].x / cos(theta)) * dx;
+            P += omegaEven * F * cos(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy].x / cos(theta)) * dx;
+            Q += omegaEven * F * sin(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy].x / cos(theta)) * dx;
         }
         else
         {
-            P += omegaOdd * F * cos(k0 * _VesselCoord[i * _VesselNy].x / cos(theta)) * dx;
-            Q += omegaOdd * F * sin(k0 * _VesselCoord[i * _VesselNy].x / cos(theta)) * dx;
+            P += omegaOdd * F * cos(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy].x / cos(theta)) * dx;
+            Q += omegaOdd * F * sin(k0 * _VesselCoord[vesselCoordIndexStart + i * _VesselNy].x / cos(theta)) * dx;
         }
     }
 
@@ -48,7 +50,7 @@ float2 ComplexAmplitudeFunction(StructuredBuffer<float3> _VesselCoord, int _Vess
     return temp;
 }
 
-float ComputeShipWaveElevationLocal(float x, float z, StructuredBuffer<float3> _VesselCoord, int _VesselNx, int _VesselNy, float U)
+float ComputeShipWaveElevationLocal(float x, float z, int vesselNum, StructuredBuffer<float3> _VesselCoord, int _VesselNx, int _VesselNy, float U)
 {
     float k0 = g / pow(U, 2.0);
 
@@ -71,8 +73,8 @@ float ComputeShipWaveElevationLocal(float x, float z, StructuredBuffer<float3> _
 
 
     // Each theta has its own amplitude (transverse and divergent wave amplitude)
-    float2 A1 = ComplexAmplitudeFunction(_VesselCoord, _VesselNx, _VesselNy, theta.x, U);  // float2 since complex -> float2(real, imaginary)
-    float2 A2 = ComplexAmplitudeFunction(_VesselCoord, _VesselNx, _VesselNy, theta.y, U);  // float2 since complex -> float2(real, imaginary)
+    float2 A1 = ComplexAmplitudeFunction(vesselNum, _VesselCoord, _VesselNx, _VesselNy, theta.x, U); // float2 since complex -> float2(real, imaginary)
+    float2 A2 = ComplexAmplitudeFunction(vesselNum, _VesselCoord, _VesselNx, _VesselNy, theta.y, U); // float2 since complex -> float2(real, imaginary)
 
     // Check if amplitude is nan (not a number) or inf (infinity). If so, set as zero.
     if (isnan(abs(A1.x)) || isnan(abs(A1.y)) || isinf(abs(A1.x)) || isinf(abs(A1.y)))

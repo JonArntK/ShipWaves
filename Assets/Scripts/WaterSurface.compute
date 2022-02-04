@@ -17,7 +17,7 @@ int _QuadCount, _XQuadCount, _ZQuadCount, _XOrigin, _ZOrigin;
 float _Time, _XStep, _ZStep;
 
 StructuredBuffer<float3> _VesselCoord;
-int _VesselNx, _VesselNy;
+int _VesselNx, _VesselNy, _NumVessels;
 
 StructuredBuffer<float4> _VesselPath;
 int _VesselPathNumPoints;
@@ -57,7 +57,11 @@ Vertex GenerateQuad (uint id) // generate vertex for grid of quads, from 1D arra
 
     //float elevation = ComputeElevationSin(vertex.position.x, vertex.position.z, _Time); // Computing elevation using the global position.
     //float elevation = ComputeShipWaveElevationLocal(vertex.position.x, vertex.position.z, _VesselCoord, _VesselNx, _VesselNy);
-    float elevation = ComputeShipWaveElevationGlobal(vertex.position.x, vertex.position.z, _VesselCoord, _VesselNx, _VesselNy, _VesselPath, _VesselPathNumPoints);
+    float elevation = 0;
+    for (int i = 0; i < _NumVessels; i++)
+    {
+        elevation += ComputeShipWaveElevationGlobal(vertex.position.x, vertex.position.z, i, _VesselCoord, _VesselNx, _VesselNy, _VesselPath, _VesselPathNumPoints);
+    }
     vertex.position.y = elevation;
 
     vertex.texcoord = float2(u, v);

@@ -12,9 +12,7 @@ public class GPUWaterSurface : MonoBehaviour
     public float xStep, zStep;
     public int xQuadCount, zQuadCount, QuadCount, TriangleCount;    // These should not be public, but want them visible in the inspector as of now.
 
-    private GraphicsBuffer _VertexBuffer;
-    private GraphicsBuffer _NormalBuffer;
-    private GraphicsBuffer _TexcoordBuffer;
+    private GraphicsBuffer _VertexBuffer, _NormalBuffer, _TexcoordBuffer;
     private Material _Material;
     private Mesh _Mesh;
 
@@ -22,8 +20,8 @@ public class GPUWaterSurface : MonoBehaviour
     [SerializeField] Shader WaterSurfaceShader;
     [SerializeField] Texture2D WaterSurfaceTexture;
 
-    [SerializeField] GameObject vesselGO;
-    private Vessel vessel;
+    [SerializeField] GameObject[] vesselGOs;
+    private Vessel[] vessels;
     private ComputeBuffer vesselCoord, vesselPath;
     private float time, vesselPathDeltaTime = 0.01f;
 
@@ -125,41 +123,67 @@ public class GPUWaterSurface : MonoBehaviour
         vesselPath = null;
     }
 
-    private void SetVessel()
-    {
-        // Create vessel.
-        vessel = vesselGO.GetComponent<Vessel>();
-        float3[] points = vessel.GetVesselCoord();
-
-        vesselCoord = new ComputeBuffer(points.Length, 3 * sizeof(float));  // 'points' is a vector of float3 -> size = 3 * sizeof(float).
-        vesselCoord.SetData(points);    // Assign data to ComputeBuffer.
-        WaterSurfaceCS.SetBuffer(0, vesselCoordId, vesselCoord);    // Assign ComputeBuffer to ComputeShader.
-        WaterSurfaceCS.SetInt("_VesselNx", vessel.GetVesselNxNy().x);
-        WaterSurfaceCS.SetInt("_VesselNy", vessel.GetVesselNxNy().y);
-    }
-
     private void UpdateVesselPath()
     {
+        // Get number of vessels.
+        int numVessels = vesselGOs.Length;
+
+        int vesselPathLength = vessels[0].GetVesselPathLength();
+
+        vesselPath = new ComputeBuffer(vesselPathLength * numVessels, 4 * sizeof(float));  // 'vesselPathArray' is a vector of float4 -> size = 4 * sizeof(float).
+
         // Update and get vessel path.
         time += Time.deltaTime;
         if (time >= vesselPathDeltaTime)
         {
             time -= vesselPathDeltaTime;
-
-            
         }
-        //vessel.UpdateVesselPath(Time.time);
-        Queue<float4> vesselPathQueue = vessel.GetVesselPathQueue();
-        float4[] vesselPathArray = vesselPathQueue.ToArray();
 
-        vesselPath = new ComputeBuffer(vesselPathArray.Length, 4 * sizeof(float));  // 'vesselPathArray' is a vector of float4 -> size = 4 * sizeof(float).
-        vesselPath.SetData(vesselPathArray);
+        //vessel.UpdateVesselPath(Time.time);
+        for (int i = 0; i < numVessels; i++)
+        {
+            Queue<float4> vesselPathQueue = vessels[i].GetVesselPathQueue();
+            float4[] vesselPathArray = vesselPathQueue.ToArray();
+            vesselPath.SetData(vesselPathArray, 0, i * vesselPathLength, vesselPathLength);
+        }
+        
         WaterSurfaceCS.SetBuffer(0, vesselPathId, vesselPath);  // Assign ComputeBuffer to ComputeShader
-        WaterSurfaceCS.SetInt("_VesselPathNumPoints", vesselPathArray.Length);
+        WaterSurfaceCS.SetInt("_VesselPathNumPoints", vesselPathLength);
     }
 
     private void Start()
     {
         SetVessel();
+    }
+
+    private void SetVessel()
+    {
+        // Get number of vessels.
+        int numVessels = vesselGOs.Length;
+        vessels = new Vessel[numVessels];
+
+        // Get length of vessel coordinate array for each vessel, assumed equal for all.
+        int vesselCoordLength = vesselGOs[0].GetComponent<Vessel>().GetVesselNx() * vesselGOs[0].GetComponent<Vessel>().GetVesselNy();
+
+        // Initialize computebuffer
+        vesselCoord = new ComputeBuffer(vesselCoordLength * numVessels, 3 * sizeof(float));  // will store a vector of float3 -> size = 3 * sizeof(float).
+
+
+        // Insert info of each vessel into the computebuffer.
+        for (int i = 0; i < numVessels; i++)
+        {
+            vessels[i] = vesselGOs[i].GetComponent<Vessel>();
+
+            float3[] points = vessels[i].GetVesselCoord();
+
+            // Assign data to ComputeBuffer. 'computeBufferStartIndex' is dependent on vessel number, enabling mulitple vessels.
+            vesselCoord.SetData(points, 0, i * vesselCoordLength, points.Length);    
+        }
+
+        WaterSurfaceCS.SetBuffer(0, vesselCoordId, vesselCoord);    // Assign ComputeBuffer to ComputeShader.
+
+        WaterSurfaceCS.SetInt("_NumVessels", numVessels);
+        WaterSurfaceCS.SetInt("_VesselNx", vessels[0].GetVesselNx());   // Defined as equal for all vessels.
+        WaterSurfaceCS.SetInt("_VesselNy", vessels[0].GetVesselNy());   // Defined as equal for all vessels.
     }
 }

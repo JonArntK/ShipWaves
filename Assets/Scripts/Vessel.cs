@@ -10,6 +10,7 @@ public class Vessel : MonoBehaviour
     private float L, B, D;
     private float dx, dz;
 
+
     public int Nx, Nz;
     public float U = 0;
 
@@ -18,14 +19,13 @@ public class Vessel : MonoBehaviour
     // Vessel path
     float4[] vesselPath;
     Queue<float4> vesselPathQueue;
+    private int vesselPathLength, vesselPathMaxLength = 1200;
 
     private void Awake()
     {
         L = 8f;
         B = (0.75f / 8f) * L;
         D = (1f / 16f) * L;
-        dx = 2f;
-        dz = 0.5f;
 
         CreateVesselCoord();
 
@@ -64,7 +64,9 @@ public class Vessel : MonoBehaviour
 
     // Vessel geometry.
     public float3[] GetVesselCoord() { return vesselCoord; }
-    public int2 GetVesselNxNy() { return new int2(Nx, Nz); }
+    public int GetVesselNx() { return Nx; }
+    public int GetVesselNy() { return Nz; }
+    public int GetVesselPathLength() { return vesselPathLength; }
 
     private void CreateVesselCoord()
     {
@@ -152,10 +154,11 @@ public class Vessel : MonoBehaviour
         float4 newPoint = new float4(transform.position.x, transform.position.z, Time.time, -angle * 2f * Mathf.PI / 360f);
         vesselPathQueue.Enqueue(newPoint);
 
-        if (vesselPathQueue.Count >= 1200)
+        if (vesselPathQueue.Count >= vesselPathMaxLength)
         {
             vesselPathQueue.Dequeue();
         }
-        Debug.Log(angle);
+
+        vesselPathLength = vesselPathQueue.Count;
     }
 }
