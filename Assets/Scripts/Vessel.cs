@@ -46,7 +46,7 @@ public class Vessel : MonoBehaviour
         }
 
         // Move.
-        this.transform.Translate(new Vector3(1, 0, 0) * Time.deltaTime * U);
+        this.transform.Translate(Vector3.forward * Time.deltaTime * U);
 
         // Rotate when pressing left or right arrow.
         if (Input.GetKey(KeyCode.LeftArrow))
