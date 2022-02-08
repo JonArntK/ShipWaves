@@ -150,7 +150,7 @@ public class Vessel : MonoBehaviour
     public void UpdateVesselPath()
     {
         //float4 newPoint = new float4(-70 + Time.time * U, 0f, Time.time, 0f);
-        float angle = transform.rotation.eulerAngles.y;
+        float angle = transform.rotation.eulerAngles.y - 90f;
         float4 newPoint = new float4(transform.position.x, transform.position.z, Time.time, -angle * 2f * Mathf.PI / 360f);
         vesselPathQueue.Enqueue(newPoint);
 
