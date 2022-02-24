@@ -183,7 +183,6 @@ public class GPUWaterSurface : MonoBehaviour
         WaterSurfaceCS.SetBuffer(0, vesselCoordId, vesselCoord);    // Assign ComputeBuffer to ComputeShader.
 
         WaterSurfaceCS.SetInt("_NumVessels", numVessels);
-        WaterSurfaceCS.SetInt("_VesselNx", vessels[0].GetVesselNx());   // Defined as equal for all vessels.
-        WaterSurfaceCS.SetInt("_VesselNy", vessels[0].GetVesselNy());   // Defined as equal for all vessels.
+        WaterSurfaceCS.SetInts("_VesselNxNy", vessels[0].GetVesselNx(), vessels[0].GetVesselNy());   // Defined as equal for all vessels.
     }
 }
