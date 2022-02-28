@@ -1,6 +1,8 @@
 #ifndef __GENERATEMESH_HLSL__
 #define __GENERATEMESH_HLSL__
 
+#include "HLSLMath.hlsl"
+
 // Custom Store2 function -> enabling storage of float2.
 void Store2(RWByteAddressBuffer buffer, int index, float2 v)
 {
@@ -23,6 +25,23 @@ struct Vertex
     float2 texcoord;
 };
 
+// Generate vertex for grid of quads, from 1D array index (branchless version).
+Vertex GenerateQuad(uint id, int _XQuadCount, float _XStep, float _ZStep, int _XOrigin, int _ZOrigin)
+{
+    float instance = floor(float(id + 0.00001) / 6.0); // Index of current quad.
+    float3 center = float3(floor(Mod(instance, _XQuadCount)), 0.0, floor(instance / _XQuadCount)); // Center of current quad.
+
+    Vertex vertex;
+    float u = Mod(float(id), 2.0); // Local x-position of quad.
+    float v = sign(Mod(126.0, Mod(float(id), 6.0) + 6.0)); // Local z-position of quad.
+    float3 localPos = float3(u, 0, v);
+
+    vertex.position = (localPos + center) * float3(_XStep, 1, _ZStep) + float3(_XOrigin, 0, _ZOrigin); // Assigning position to vertex.
+    vertex.texcoord = float2(u, v);
+    return vertex;
+}
+
+// Store triangular element.
 void StoreTriangle(uint idx1, uint idx2, uint idx3, Vertex v1, Vertex v2, Vertex v3, RWByteAddressBuffer _VertexBuffer, RWByteAddressBuffer _NormalBuffer, RWByteAddressBuffer _TexcoordBuffer)
 {
     // Triangle vertices (v1, v2, v3) should be given in a counter clock-wise direction.

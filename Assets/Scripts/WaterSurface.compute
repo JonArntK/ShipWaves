@@ -8,7 +8,7 @@
 #define GROUP_SIZE_Z 1
 
 
-// Define buffers for storing vertices, normals and texture coordiantes of the mesh.
+// Define buffers for storing the vertices, normals and texture coordinates of the mesh.
 RWByteAddressBuffer _VertexBuffer;
 RWByteAddressBuffer _NormalBuffer;
 RWByteAddressBuffer _TexcoordBuffer;
@@ -32,25 +32,8 @@ float ComputeElevation(Vertex v)
     {
         elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, _VesselCoord, _VesselNxNy, _VesselPath, _VesselPathNumPoints);
     }
-    return elevation;
+    return elevation * 3.0;
 }
-
-// Generate vertex for grid of quads, from 1D array index (branchless version).
-Vertex GenerateQuad (uint id) 
-{
-    float instance = floor(float(id + 0.00001) / 6.0); // Index of current quad.
-    float3 center = float3(floor(Mod(instance, _XQuadCount)), 0.0, floor(instance / _XQuadCount)); // Center of current quad.
-
-    Vertex vertex;
-    float u = Mod(float(id), 2.0);                          // Local x-position of quad.
-    float v = sign(Mod(126.0, Mod(float(id), 6.0) + 6.0));  // Local z-position of quad.
-    float3 localPos = float3(u, 0, v);
-
-    vertex.position = (localPos + center) * float3(_XStep, 1, _ZStep) + float3(_XOrigin, 0, _ZOrigin);  // Assigning position to vertex.
-    vertex.texcoord = float2(u, v);
-    return vertex;
-}
-
 
  
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
@@ -66,10 +49,10 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     uint idx6 = id * 6 + 5;  
 
     // Generate quad.
-    Vertex v1 = GenerateQuad(idx1);
-    Vertex v2 = GenerateQuad(idx2);
-    Vertex v3 = GenerateQuad(idx3); 
-    Vertex v6 = GenerateQuad(idx6); 
+    Vertex v1 = GenerateQuad(idx1, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
+    Vertex v2 = GenerateQuad(idx2, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
+    Vertex v3 = GenerateQuad(idx3, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
+    Vertex v6 = GenerateQuad(idx6, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
 
     // Compute surface elevation.
     v1.position.y = ComputeElevation(v1);

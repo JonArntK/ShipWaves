@@ -102,7 +102,7 @@ float ComputeShipWaveElevationLocal(float x, float z, int vesselNum, StructuredB
     
     
     float zeta = amp * (temp1.x + temp2.x);     // Want the real part of the elevation.
-    return zeta * 3.0;
+    return zeta;
 }
 
 #endif // __COMPUTEELEVATIONLOCAL_HLSL__
