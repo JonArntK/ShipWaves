@@ -24,6 +24,17 @@ int2 _VesselNxNy;
 StructuredBuffer<float4> _VesselPath;
 int _VesselPathNumPoints;
  
+
+float ComputeElevation(Vertex v)
+{
+    float elevation = 0;
+    for (int i = 0; i < _NumVessels; i++)
+    {
+        elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, _VesselCoord, _VesselNxNy, _VesselPath, _VesselPathNumPoints);
+    }
+    return elevation;
+}
+
 // Generate vertex for grid of quads, from 1D array index (branchless version).
 Vertex GenerateQuad (uint id) 
 {
@@ -36,17 +47,11 @@ Vertex GenerateQuad (uint id)
     float3 localPos = float3(u, 0, v);
 
     vertex.position = (localPos + center) * float3(_XStep, 1, _ZStep) + float3(_XOrigin, 0, _ZOrigin);  // Assigning position to vertex.
-
-    float elevation = 0;
-    for (int i = 0; i < _NumVessels; i++)
-    {
-        elevation += ComputeShipWaveElevationGlobal(vertex.position.x, vertex.position.z, i, _VesselCoord, _VesselNxNy, _VesselPath, _VesselPathNumPoints);
-    }
-    vertex.position.y = elevation;
-
     vertex.texcoord = float2(u, v);
     return vertex;
 }
+
+
  
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
 void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
@@ -60,14 +65,20 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     uint idx5 = id * 6 + 4;  
     uint idx6 = id * 6 + 5;  
 
+    // Generate quad.
     Vertex v1 = GenerateQuad(idx1);
     Vertex v2 = GenerateQuad(idx2);
-    Vertex v3 = GenerateQuad(idx3);  
-    //Vertex v4 = GenerateQuad(idx4);
-    //Vertex v5 = GenerateQuad(idx5);
+    Vertex v3 = GenerateQuad(idx3); 
     Vertex v6 = GenerateQuad(idx6); 
 
+    // Compute surface elevation.
+    v1.position.y = ComputeElevation(v1);
+    v2.position.y = ComputeElevation(v2);
+    v3.position.y = ComputeElevation(v3);
+    v6.position.y = ComputeElevation(v6);
+
     // ----- Triangluar mesh from quads -----
+    // Quads are generated in the order displayed below
     //    p3, p5        p6
     //       ___________
     //      |\          |
@@ -82,47 +93,6 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     // which is equivalent to      (p1, p2, p3) and (p2, p3, p6),
     // avoiding the computation of p4 and p5.
 
-    float3 p1 = v1.position;
-    float3 p2 = v2.position;
-    float3 p3 = v3.position;
-    //float3 p4 = v4.position;
-    //float3 p5 = v5.position;
-    float3 p6 = v6.position;
-
-    float2 uv1 = v1.texcoord;
-    float2 uv2 = v2.texcoord;
-    float2 uv3 = v3.texcoord;
-    //float2 uv4 = v4.texcoord;
-    //float2 uv5 = v5.texcoord;
-    float2 uv6 = v6.texcoord;
-
-    float3 normal = -normalize(cross(p2 - p1, p3 - p2));  
-    float3 normal2 = normalize(cross(p3 - p2, p6 - p3));  
-
-
-    Store3(_VertexBuffer, idx1, p1);
-    Store3(_VertexBuffer, idx2, p3);
-    Store3(_VertexBuffer, idx3, p2);
-
-    Store3(_VertexBuffer, idx4, p2);
-    Store3(_VertexBuffer, idx5, p3);
-    Store3(_VertexBuffer, idx6, p6);
-
-
-    Store2(_TexcoordBuffer, idx1, uv1);
-    Store2(_TexcoordBuffer, idx2, uv3);
-    Store2(_TexcoordBuffer, idx3, uv2);     
-
-    Store2(_TexcoordBuffer, idx4, uv2);
-    Store2(_TexcoordBuffer, idx5, uv3);
-    Store2(_TexcoordBuffer, idx6, uv6); 
-
-
-    Store3(_NormalBuffer, idx1, normal);
-    Store3(_NormalBuffer, idx2, normal);
-    Store3(_NormalBuffer, idx3, normal);  
-
-    Store3(_NormalBuffer, idx4, normal2);
-    Store3(_NormalBuffer, idx5, normal2);
-    Store3(_NormalBuffer, idx6, normal2);
+    StoreTriangle(idx1, idx2, idx3, v1, v3, v2, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
+    StoreTriangle(idx4, idx5, idx6, v2, v3, v6, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
 }
