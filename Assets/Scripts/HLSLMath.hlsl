@@ -1,3 +1,6 @@
+#ifndef __HLSLMATH_HLSL__
+#define __HLSLMATH_HLSL__
+
 #define PI 3.14159265358979323846
 #define E 2.71828183
 #define g 9.81
@@ -106,3 +109,5 @@ float2 c_exp(float2 c)
     float b = exp(c.x) * sin(c.y);
     return float2(a, b);
 }
+
+#endif // __HLSLMATH_HLSL__

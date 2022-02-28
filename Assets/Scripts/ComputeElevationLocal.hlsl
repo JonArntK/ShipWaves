@@ -1,3 +1,6 @@
+#ifndef __COMPUTEELEVATIONLOCAL_HLSL__
+#define __COMPUTEELEVATIONLOCAL_HLSL__
+
 #include "HLSLMath.hlsl"
 
 #define KELVIN_ANGLE 0.3398369095
@@ -101,3 +104,5 @@ float ComputeShipWaveElevationLocal(float x, float z, int vesselNum, StructuredB
     float zeta = amp * (temp1.x + temp2.x);     // Want the real part of the elevation.
     return zeta * 3.0;
 }
+
+#endif // __COMPUTEELEVATIONLOCAL_HLSL__

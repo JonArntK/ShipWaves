@@ -1,3 +1,6 @@
+#ifndef __COMPUTEELEVATIONGLOBAL_HLSL__
+#define __COMPUTEELEVATIONGLOBAL_HLSL__
+
 #include "ComputeElevationLocal.hlsl"
 
 float3 GetCircleGlobal(float XP, float ZP, float U, float t, float tP, float heading)
@@ -60,3 +63,5 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, Structured
     }
     
 }
+
+#endif // __COMPUTEELEVATIONGLOBAL_HLSL__
