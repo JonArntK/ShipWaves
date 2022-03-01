@@ -5,6 +5,17 @@
 #define E 2.71828183
 #define g 9.81
 
+// Check if two numbers are equal.
+bool IsClose(float a, float b)
+{
+    float eps = 1e-8;
+    if (abs(a - b) < eps)
+    {
+        return true;
+    }
+    return false;
+}
+
 // Custom modulus function for floats.
 float Mod(float x, float y)
 {

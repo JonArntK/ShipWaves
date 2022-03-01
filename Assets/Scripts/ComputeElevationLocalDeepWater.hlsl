@@ -54,9 +54,8 @@ float2 ComplexAmplitudeFunctionDeepWater(int vesselNum, VesselGeometryStruct vgs
         }
     }
 
-    float2 amp = float2(0.0, -2.0 / PI * pow(k0, 2.0) / pow(cos(theta), 4.0));
-    float2 temp = c_mul(amp, float2(P, Q));
-    return temp;
+    float2 amp = float2(0.0, -2.0 / PI * pow(k0, 2.0) / pow(cos(theta), 4.0));  // The amplitude is imaginary.
+    return c_mul(amp, float2(P, Q));
 }
 
 float ComputeShipWaveElevationLocalDeepWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U)
