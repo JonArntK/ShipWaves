@@ -18,7 +18,7 @@ float3 GetCircleGlobal(float XP, float ZP, float U, float t, float tP, float hea
 }
 
 
-float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, StructuredBuffer<float3> _VesselCoord, int2 _VesselNxNy, VesselPathStruct vps)
+float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
     int _VesselPathNumPoints = vps.numPoints;
 
@@ -57,7 +57,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, Structured
         float x = (t - tP) * U + (XRotated - XP);
         float z = ZRotated - ZP;
 
-        float y = ComputeShipWaveElevationLocal(x, z, vesselNum, _VesselCoord, _VesselNxNy[0], _VesselNxNy[1], U);
+        float y = ComputeShipWaveElevationLocal(x, z, vesselNum, vgs, U);
 
         return y;
     }
