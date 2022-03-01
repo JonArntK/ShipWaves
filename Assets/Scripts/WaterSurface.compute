@@ -24,15 +24,16 @@ int _NumVessels;
 StructuredBuffer<float3> _VesselCoord;
 int2 _VesselNxNy;
 
-StructuredBuffer<float4> _VesselPath;
+StructuredBuffer<float2> _VesselPathCoord;
+StructuredBuffer<float> _VesselPathTime, _VesselPathHeading, _VesselPathDepth;
 int _VesselPathNumPoints;
 
-float ComputeElevation(Vertex v)
+float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
     float elevation = 0;
     for (int i = 0; i < _NumVessels; i++)
     {
-        elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, _VesselCoord, _VesselNxNy, _VesselPath, _VesselPathNumPoints);
+        elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, vgs.coord, vgs.vesselNxNy, vps);
     }
     return elevation * 3.0;
 }
@@ -42,6 +43,7 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 {
     // Initialize structs.
     VesselGeometryStruct vesselGeometryInfo = InitializeVesselGeometry(_VesselCoord, _VesselNxNy);
+    VesselPathStruct vesselPathInfo = InitializeVesselPath(_VesselPathNumPoints, _VesselPathCoord, _VesselPathTime, _VesselPathHeading, _VesselPathDepth);
 
     uint id = threadID.x + threadID.y * GROUP_SIZE_X;
     if ((int)id >= _QuadCount) return;
@@ -59,10 +61,10 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     Vertex v6 = GenerateQuad(idx6, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
 
     // Compute surface elevation.
-    v1.position.y = ComputeElevation(v1);
-    v2.position.y = ComputeElevation(v2);
-    v3.position.y = ComputeElevation(v3);
-    v6.position.y = ComputeElevation(v6);
+    v1.position.y = ComputeElevation(v1, vesselGeometryInfo, vesselPathInfo);
+    v2.position.y = ComputeElevation(v2, vesselGeometryInfo, vesselPathInfo);
+    v3.position.y = ComputeElevation(v3, vesselGeometryInfo, vesselPathInfo);
+    v6.position.y = ComputeElevation(v6, vesselGeometryInfo, vesselPathInfo);
 
     // ----- Triangular mesh from quads -----
     // Quads are generated from the 'id' in the order displayed below.

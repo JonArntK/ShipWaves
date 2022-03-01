@@ -2,6 +2,8 @@
 #define __COMPUTEELEVATIONGLOBAL_HLSL__
 
 #include "ComputeElevationLocal.hlsl"
+#include "VesselGeometryStruct.hlsl"
+#include "VesselPathStruct.hlsl"
 
 float3 GetCircleGlobal(float XP, float ZP, float U, float t, float tP, float heading)
 {
@@ -16,23 +18,25 @@ float3 GetCircleGlobal(float XP, float ZP, float U, float t, float tP, float hea
 }
 
 
-float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, StructuredBuffer<float3> _VesselCoord, int2 _VesselNxNy, StructuredBuffer <float4>_VesselPath, int _VesselPathNumPoints)
+float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, StructuredBuffer<float3> _VesselCoord, int2 _VesselNxNy, VesselPathStruct vps)
 {
+    int _VesselPathNumPoints = vps.numPoints;
+
     int vesselPathIndexStart = vesselNum * _VesselPathNumPoints;
 
     // VesselPath = X, Y, t, heading
-    float t = _VesselPath[vesselPathIndexStart + _VesselPathNumPoints - 1].z;
+    float t = vps.time[vesselPathIndexStart + _VesselPathNumPoints - 1];
     
     float X0, Z0, R, U;
     int index = 0;
     bool flag = false;
     for (int i = _VesselPathNumPoints - 2; i >= 0; i--)
     {
-        U = sqrt(pow(_VesselPath[vesselPathIndexStart + i].x - _VesselPath[vesselPathIndexStart + i + 1].x, 2) 
-            + pow(_VesselPath[vesselPathIndexStart + i].y - _VesselPath[vesselPathIndexStart + i + 1].y, 2)) / 
-            abs(_VesselPath[vesselPathIndexStart + i].z - _VesselPath[vesselPathIndexStart + i + 1].z);
+        U = sqrt(pow(vps.coord[vesselPathIndexStart + i].x - vps.coord[vesselPathIndexStart + i + 1].x, 2) 
+            + pow(vps.coord[vesselPathIndexStart + i].y - vps.coord[vesselPathIndexStart + i + 1].y, 2)) /
+            abs(vps.time[vesselPathIndexStart + i] - vps.time[vesselPathIndexStart + i + 1]);
 
-        float3 globalCircle = GetCircleGlobal(_VesselPath[vesselPathIndexStart + i].x, _VesselPath[vesselPathIndexStart + i].y, U, t, _VesselPath[vesselPathIndexStart + i].z, _VesselPath[vesselPathIndexStart + i].w);
+        float3 globalCircle = GetCircleGlobal(vps.coord[vesselPathIndexStart + i].x, vps.coord[vesselPathIndexStart + i].y, U, t, vps.time[vesselPathIndexStart + i], vps.heading[vesselPathIndexStart + i]);
         X0 = globalCircle.x, Z0 = globalCircle.y, R = globalCircle.z;
         if (IsPointInCircle(X, Z, X0, Z0, R))
         {
@@ -45,7 +49,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, Structured
     if (flag)
     {
         // Find point P
-        float XP = _VesselPath[vesselPathIndexStart + index].x, ZP = _VesselPath[vesselPathIndexStart + index].y, tP = _VesselPath[vesselPathIndexStart + index].z, heading = _VesselPath[vesselPathIndexStart + index].w;
+        float XP = vps.coord[vesselPathIndexStart + index].x, ZP = vps.coord[vesselPathIndexStart + index].y, tP = vps.time[vesselPathIndexStart + index], heading = vps.heading[vesselPathIndexStart + index];
 
         float2 rotatedCoord = RotationMatrix(X, Z, -heading + PI, XP, ZP);   // 
         float XRotated = rotatedCoord.x, ZRotated = rotatedCoord.y;

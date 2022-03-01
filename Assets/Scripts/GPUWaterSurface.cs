@@ -22,13 +22,16 @@ public class GPUWaterSurface : MonoBehaviour
 
     [SerializeField] GameObject[] vesselGOs;
     private Vessel[] vessels;
-    private ComputeBuffer vesselCoord, vesselPath;
+    private ComputeBuffer vesselCoord, vesselPathCoord, vesselPathTime, vesselPathHeading, vesselPathDepth;
     private float time, vesselPathDeltaTime = 0.01f;
 
 
     static readonly int
         vesselCoordId = Shader.PropertyToID("_VesselCoord"),
-        vesselPathId = Shader.PropertyToID("_VesselPath");
+        vesselPathCoordId = Shader.PropertyToID("_VesselPathCoord"),
+        vesselPathTimeId = Shader.PropertyToID("_VesselPathTime"),
+        vesselPathHeadingId = Shader.PropertyToID("_VesselPathHeading"),
+        vesselPathDepthId = Shader.PropertyToID("_VesselPathDepth");
 
     private void Update()
     {
@@ -94,7 +97,10 @@ public class GPUWaterSurface : MonoBehaviour
 
         WaterSurfaceCS.Dispatch(0, (QuadCount + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
 
-        vesselPath.Release();
+        vesselPathCoord.Release();
+        vesselPathTime.Release();
+        vesselPathHeading.Release();
+        vesselPathDepth.Release();
     }
 
     private void Release()
@@ -119,8 +125,14 @@ public class GPUWaterSurface : MonoBehaviour
         vesselCoord.Release();
         vesselCoord = null;
 
-        vesselPath.Release();
-        vesselPath = null;
+        vesselPathCoord.Release();
+        vesselPathTime.Release();
+        vesselPathHeading.Release();
+        vesselPathDepth.Release();
+        vesselPathCoord = null;
+        vesselPathTime = null;
+        vesselPathHeading = null;
+        vesselPathDepth = null;
     }
 
     private void UpdateVesselPath()
@@ -130,7 +142,10 @@ public class GPUWaterSurface : MonoBehaviour
 
         int vesselPathLength = vessels[0].GetVesselPathLength();
 
-        vesselPath = new ComputeBuffer(vesselPathLength * numVessels, 4 * sizeof(float));  // 'vesselPathArray' is a vector of float4 -> size = 4 * sizeof(float).
+        vesselPathCoord = new ComputeBuffer(vesselPathLength * numVessels, 2 * sizeof(float));
+        vesselPathTime = new ComputeBuffer(vesselPathLength * numVessels, sizeof(float));
+        vesselPathHeading = new ComputeBuffer(vesselPathLength * numVessels, sizeof(float));
+        vesselPathDepth = new ComputeBuffer(vesselPathLength * numVessels, sizeof(float));
 
         // Update and get vessel path.
         time += Time.deltaTime;
@@ -142,12 +157,27 @@ public class GPUWaterSurface : MonoBehaviour
         //vessel.UpdateVesselPath(Time.time);
         for (int i = 0; i < numVessels; i++)
         {
-            Queue<float4> vesselPathQueue = vessels[i].GetVesselPathQueue();
-            float4[] vesselPathArray = vesselPathQueue.ToArray();
-            vesselPath.SetData(vesselPathArray, 0, i * vesselPathLength, vesselPathLength);
+            Queue<float2> vesselPathCoordQueue = vessels[i].GetVesselPathCoordQueue();
+            Queue<float> vesselPathTimeQueue = vessels[i].GetVesselPathTimeQueue();
+            Queue<float> vesselPathHeadingQueue = vessels[i].GetVesselPathHeadingQueue();
+            Queue<float> vesselPathDepthQueue = vessels[i].GetVesselPathDepthQueue();
+
+            float2[] vesselPathCoordArray = vesselPathCoordQueue.ToArray();
+            float[] vesselPathTimeArray = vesselPathTimeQueue.ToArray();
+            float[] vesselPathHeadingArray = vesselPathHeadingQueue.ToArray();
+            float[] vesselPathDepthArray = vesselPathDepthQueue.ToArray();
+
+
+            vesselPathCoord.SetData(vesselPathCoordArray, 0, i * vesselPathLength, vesselPathLength);
+            vesselPathTime.SetData(vesselPathTimeArray, 0, i * vesselPathLength, vesselPathLength);
+            vesselPathHeading.SetData(vesselPathHeadingArray, 0, i * vesselPathLength, vesselPathLength);
+            vesselPathDepth.SetData(vesselPathDepthArray, 0, i * vesselPathLength, vesselPathLength);
         }
         
-        WaterSurfaceCS.SetBuffer(0, vesselPathId, vesselPath);  // Assign ComputeBuffer to ComputeShader
+        WaterSurfaceCS.SetBuffer(0, vesselPathCoordId, vesselPathCoord);  // Assign ComputeBuffer to ComputeShader
+        WaterSurfaceCS.SetBuffer(0, vesselPathTimeId, vesselPathTime);  // Assign ComputeBuffer to ComputeShader
+        WaterSurfaceCS.SetBuffer(0, vesselPathHeadingId, vesselPathHeading);  // Assign ComputeBuffer to ComputeShader
+        WaterSurfaceCS.SetBuffer(0, vesselPathDepthId, vesselPathDepth);  // Assign ComputeBuffer to ComputeShader
         WaterSurfaceCS.SetInt("_VesselPathNumPoints", vesselPathLength);
     }
 

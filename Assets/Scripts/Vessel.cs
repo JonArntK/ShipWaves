@@ -18,7 +18,8 @@ public class Vessel : MonoBehaviour
 
     // Vessel path
     float4[] vesselPath;
-    Queue<float4> vesselPathQueue;
+    Queue<float2> vesselPathCoordQueue;
+    Queue<float> vesselPathTimeQueue, vesselPathHeadingQueue, vesselPathDepthQueue;
     private int vesselPathLength, vesselPathMaxLength = 1200;
 
     private void Awake()
@@ -95,70 +96,38 @@ public class Vessel : MonoBehaviour
 
     // Vessel path.
     public float4[] GetVesselPath() { return vesselPath; }
-    public Queue<float4> GetVesselPathQueue() { return vesselPathQueue; }
+    public Queue<float2> GetVesselPathCoordQueue() { return vesselPathCoordQueue; }
+    public Queue<float> GetVesselPathTimeQueue() { return vesselPathTimeQueue; }
+    public Queue<float> GetVesselPathHeadingQueue() { return vesselPathHeadingQueue; }
+    public Queue<float> GetVesselPathDepthQueue() { return vesselPathDepthQueue; }
 
-    private float VesselPathFunction(float x)
-    {
-        return x / (Mathf.Sin(x / 40f) - 2);
-    }
-    public void UpdateVesselPath2()
-    {
-        float U = Mathf.Sqrt(9.81f);
-        float dt = 1f;
-        float S = 100f;
-        float x0 = 0f;
-        float y0 = 0f;
-
-        float dS = U * dt;
-        int nPoints = Mathf.FloorToInt(S / dS);
-
-        vesselPath = new float4[nPoints];
-
-
-        float heading, x, y, tP;
-        for (int i = 0; i < nPoints; i++)
-        {
-            x = x0 + dS * i;
-            y = y0 + VesselPathFunction(x);
-
-            if (i == 0)
-            {
-                heading = Mathf.Atan2(y, x);
-                tP = 0.0f; 
-            }
-            else
-            {
-                heading = Mathf.Atan2(y - vesselPath[i - 1].y, x - vesselPath[i - 1].x);
-
-                tP = vesselPath[i - 1].z - Mathf.Sqrt(Mathf.Pow(vesselPath[i - 1].x - x, 2) + Mathf.Pow(vesselPath[i - 1].y - y, 2)) / U;
-            }
-
-            vesselPath[i] = new float4(x, y, tP, heading + Mathf.PI);
-        }
-        for (int i = 0; i < nPoints; i++)
-        {
-            vesselPath[i].z += Mathf.Abs(vesselPath[nPoints - 1].z);
-        }
-
-        System.Array.Reverse(vesselPath);
-    }
     public void CreateVesselPath()
     {
-        vesselPathQueue = new Queue<float4>();
+        vesselPathCoordQueue = new Queue<float2>();
+        vesselPathTimeQueue = new Queue<float>();
+        vesselPathHeadingQueue = new Queue<float>();
+        vesselPathDepthQueue = new Queue<float>();
         UpdateVesselPath();
     }
     public void UpdateVesselPath()
     {
-        //float4 newPoint = new float4(-70 + Time.time * U, 0f, Time.time, 0f);
         float angle = transform.rotation.eulerAngles.y - 90f;
-        float4 newPoint = new float4(transform.position.x, transform.position.z, Time.time, -angle * 2f * Mathf.PI / 360f);
-        vesselPathQueue.Enqueue(newPoint);
+        float2 newCoord = new float2(transform.position.x, transform.position.z);
+        float newHeading = -angle * 2f * Mathf.PI / 360f;
 
-        if (vesselPathQueue.Count >= vesselPathMaxLength)
+        vesselPathCoordQueue.Enqueue(newCoord);
+        vesselPathTimeQueue.Enqueue(Time.time);
+        vesselPathHeadingQueue.Enqueue(newHeading);
+        vesselPathDepthQueue.Enqueue(1000f);
+
+        if (vesselPathTimeQueue.Count >= vesselPathMaxLength)
         {
-            vesselPathQueue.Dequeue();
+            vesselPathCoordQueue.Dequeue();
+            vesselPathTimeQueue.Dequeue();
+            vesselPathHeadingQueue.Dequeue();
+            vesselPathDepthQueue.Dequeue();
         }
 
-        vesselPathLength = vesselPathQueue.Count;
+        vesselPathLength = vesselPathTimeQueue.Count;
     }
 }

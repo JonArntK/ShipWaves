@@ -4,6 +4,7 @@
 // Store information regarding the vessel paths.
 struct VesselPathStruct
 {
+    int numPoints;
     StructuredBuffer<float2> coord;
     StructuredBuffer<float> time;
     StructuredBuffer<float> heading;
@@ -11,10 +12,11 @@ struct VesselPathStruct
 };
 
 // Initialize VesselPathStruct
-VesselPathStruct InitalizeVesselPath(StructuredBuffer<float2> coord, 
+VesselPathStruct InitializeVesselPath(int numPoints, StructuredBuffer<float2> coord, 
     StructuredBuffer<float> time, StructuredBuffer<float> heading, StructuredBuffer<float> depth)
 {
     VesselPathStruct vps;
+    vps.numPoints = numPoints;
     vps.coord = coord;
     vps.time = time;
     vps.heading = heading;
