@@ -14,12 +14,6 @@ float Mod(float x, float y)
     return x - y * floor((x + 0.00001) / y);
 }
 
-// Check if a point is inside a circle with given origo at (x0, z0).
-bool IsPointInCircle(float x, float z, float x0, float z0, float r)
-{
-    return pow(x - x0, 2) + pow(z - z0, 2) < pow(r, 2);
-}
-
 // Standard rotation matrix about point (x0, z0) of given point (x, z).
 float2 RotationMatrix(float x, float z, float theta, float x0, float z0)
 {

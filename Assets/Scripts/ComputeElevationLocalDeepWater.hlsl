@@ -1,12 +1,12 @@
-#ifndef __COMPUTEELEVATIONLOCAL_HLSL__
-#define __COMPUTEELEVATIONLOCAL_HLSL__
+#ifndef __COMPUTEELEVATIONLOCALDEEPWATER_HLSL__
+#define __COMPUTEELEVATIONLOCALDEEPWATER_HLSL__
 
 #include "HLSLMath.hlsl"
 #include "VesselGeometryStruct.hlsl"
 
 #define KELVIN_ANGLE 0.3398369095
 
-float2 ComplexAmplitudeFunction(int vesselNum, VesselGeometryStruct vgs, float theta, float U)
+float2 ComplexAmplitudeFunctionDeepWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U)
 {
     int vesselNx = vgs.vesselNxNy[0];
     int vesselNy = vgs.vesselNxNy[1];
@@ -59,33 +59,33 @@ float2 ComplexAmplitudeFunction(int vesselNum, VesselGeometryStruct vgs, float t
     return temp;
 }
 
-float ComputeShipWaveElevationLocal(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U)
+float ComputeShipWaveElevationLocalDeepWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U)
 {
     float k0 = g / pow(U, 2.0);
 
     // Compute polar coordinate equivalent to (x, z).
     float r = sqrt(pow(x, 2.0) + pow(z, 2.0));
     float alpha = atan2(z, x);
-    alpha = abs(alpha);
+    alpha = abs(alpha);     // Solution is symmetric about the x-axis.
 
     // If alpha is above the Kelvin half angle, the wave elevation is zero.
     float delta_boundary = 0.02;        // To avoid singularities at boundary equal to Kelvin angle.
     
-    if (abs(alpha) >= KELVIN_ANGLE)
+    if (abs(alpha) >= KELVIN_ANGLE)     // In deep water, no elevation is assumed outside the Kelvin angle.
     {
         return float(0.0);
     }
     
-    // For the method of stationary phase, dG/dtheta gives two solutions within the interval [-PI/2, PI/2] for theta;
+    // For the method of stationary phase, dG/dtheta gives two solutions within the interval [-PI/2, PI/2] for theta.
     float2 theta = float2(alpha / 2.0 - 0.5 * asin(3.0 * sin(alpha)), 
                         -PI / 2.0 + alpha / 2.0 + 0.5 * asin(3.0 * sin(alpha)));
 
 
-    // Each theta has its own amplitude (transverse and divergent wave amplitude)
-    float2 A1 = ComplexAmplitudeFunction(vesselNum, vgs, theta.x, U); // float2 since complex -> float2(real, imaginary)
-    float2 A2 = ComplexAmplitudeFunction(vesselNum, vgs, theta.y, U); // float2 since complex -> float2(real, imaginary)
+    // Each theta has its own amplitude (transverse and divergent wave amplitude).
+    float2 A1 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.x, U); // float2 since complex -> float2(real, imaginary)
+    float2 A2 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.y, U); // float2 since complex -> float2(real, imaginary)
 
-    // Check if amplitude is nan (not a number) or inf (infinity). If so, set as zero.
+    // Check if amplitude is nan (not a number) or inf (infinite). If so, set as zero.
     if (isnan(abs(A1.x)) || isnan(abs(A1.y)) || isinf(abs(A1.x)) || isinf(abs(A1.y)))
     {
         A1 = float2(0.0, 0.0);
@@ -111,4 +111,4 @@ float ComputeShipWaveElevationLocal(float x, float z, int vesselNum, VesselGeome
     return zeta;
 }
 
-#endif // __COMPUTEELEVATIONLOCAL_HLSL__
+#endif // __COMPUTEELEVATIONLOCALDEEPWATER_HLSL__

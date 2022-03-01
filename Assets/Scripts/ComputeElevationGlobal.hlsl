@@ -1,44 +1,60 @@
 #ifndef __COMPUTEELEVATIONGLOBAL_HLSL__
 #define __COMPUTEELEVATIONGLOBAL_HLSL__
 
-#include "ComputeElevationLocal.hlsl"
+#include "ComputeElevationGlobalDeepWaterFunctions.hlsl"
+#include "ComputeElevationGlobalFiniteWaterFunctions.hlsl"
+#include "ComputeElevationLocalDeepWater.hlsl"
+#include "ComputeElevationLocalFiniteWater.hlsl"
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
 
-float3 GetCircleGlobal(float XP, float ZP, float U, float t, float tP, float heading)
+// Compute depth Froude number.
+float Fnh(float U, float h)
 {
-    float dt = t - tP;  // Time difference from when at point P and now.
-
-    float R = 0.25 * U * dt;    // Circle radius.
-
-    float X0 = XP + R * cos(heading); // Center of circle in global coordinate system, x-component.
-    float Z0 = ZP + R * sin(heading); // Center of circle in global coordinate system, z-component.
-
-    return float3(X0, Z0, R);
+    return U / sqrt(g * h);
 }
 
+// Check if the depth satisfies criteria for finite water.
+bool IsFiniteWater(float fnh)
+{
+    if (fnh > 0.4)
+    {
+        return true;
+    }
+    return false;
+}
 
 float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
-    int _VesselPathNumPoints = vps.numPoints;
+    // Define number of points in the vessel path.
+    int vesselPathNumPoints = vps.numPoints;
+    // Define starting index for current vessel: vesselNum.
+    int vesselPathIndexStart = vesselNum * vesselPathNumPoints;
 
-    int vesselPathIndexStart = vesselNum * _VesselPathNumPoints;
-
-    // VesselPath = X, Y, t, heading
-    float t = vps.time[vesselPathIndexStart + _VesselPathNumPoints - 1];
-    
+    // Initialize values.
     float X0, Z0, R, U;
-    int index = 0;
+    int index = 0;      // Used to store the index of the correct path point when found.
     bool flag = false;
-    for (int i = _VesselPathNumPoints - 2; i >= 0; i--)
-    {
-        U = sqrt(pow(vps.coord[vesselPathIndexStart + i].x - vps.coord[vesselPathIndexStart + i + 1].x, 2) 
-            + pow(vps.coord[vesselPathIndexStart + i].y - vps.coord[vesselPathIndexStart + i + 1].y, 2)) /
-            abs(vps.time[vesselPathIndexStart + i] - vps.time[vesselPathIndexStart + i + 1]);
 
-        float3 globalCircle = GetCircleGlobal(vps.coord[vesselPathIndexStart + i].x, vps.coord[vesselPathIndexStart + i].y, U, t, vps.time[vesselPathIndexStart + i], vps.heading[vesselPathIndexStart + i]);
-        X0 = globalCircle.x, Z0 = globalCircle.y, R = globalCircle.z;
-        if (IsPointInCircle(X, Z, X0, Z0, R))
+    // Get vesselPathTime from the struct.
+    float t = vps.time[vesselPathIndexStart + vesselPathNumPoints - 1];
+    
+
+    // Loop over all points in the vessel path, starting with the point closest to the vessel (placed at the back of the array).
+    for (int i = vesselPathNumPoints - 2; i >= 0; i--)
+    {
+        int refIndex = vesselPathIndexStart + i;
+
+        // Compute velocity based on the current and previous path locations and the time difference between them.
+        U = sqrt(pow(vps.coord[refIndex].x - vps.coord[refIndex + 1].x, 2)
+            + pow(vps.coord[refIndex].y - vps.coord[refIndex].y, 2)) /
+            abs(vps.time[refIndex] - vps.time[refIndex + 1]);
+
+        float fnh = Fnh(U, vps.depth[refIndex]);
+
+        // Check if point is inside the region of disturbance. The region is dependent on the water depth, hence separate functions for deep and finite water depths.
+        if ((!IsFiniteWater(fnh) && IsPointInRegionDeepWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex])) ||
+            (IsFiniteWater(fnh) && IsPointInRegionFiniteWater()))
         {
             index = i;
             flag = true;
@@ -57,7 +73,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
         float x = (t - tP) * U + (XRotated - XP);
         float z = ZRotated - ZP;
 
-        float y = ComputeShipWaveElevationLocal(x, z, vesselNum, vgs, U);
+        float y = ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
 
         return y;
     }
