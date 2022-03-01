@@ -41,10 +41,12 @@ Vertex GenerateQuad(uint id, int _XQuadCount, float _XStep, float _ZStep, int _X
     return vertex;
 }
 
-// Store triangular element.
-void StoreTriangle(uint idx1, uint idx2, uint idx3, Vertex v1, Vertex v2, Vertex v3, RWByteAddressBuffer _VertexBuffer, RWByteAddressBuffer _NormalBuffer, RWByteAddressBuffer _TexcoordBuffer)
+// Store triangular element in buffers.
+void StoreTriangle(uint idx1, uint idx2, uint idx3, Vertex v1, Vertex v2, Vertex v3, 
+    RWByteAddressBuffer _VertexBuffer, RWByteAddressBuffer _NormalBuffer, RWByteAddressBuffer _TexcoordBuffer)
 {
-    // Triangle vertices (v1, v2, v3) should be given in a counter clock-wise direction.
+    // Triangle vertices (v1, v2, v3) should be given in a counter clock-wise direction to 
+    // ensure consistent computation of normal vectors.
 
     float3 p1 = v1.position;
     float3 p2 = v2.position;

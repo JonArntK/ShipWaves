@@ -2,6 +2,8 @@
 
 #include "ComputeElevationGlobal.hlsl"
 #include "GenerateMesh.hlsl"
+#include "VesselGeometryStruct.hlsl"
+#include "VesselPathStruct.hlsl"
 
 #define GROUP_SIZE_X 64
 #define GROUP_SIZE_Y 1
@@ -17,13 +19,13 @@ RWByteAddressBuffer _TexcoordBuffer;
 int _QuadCount, _XQuadCount, _ZQuadCount, _XOrigin, _ZOrigin;
 float _Time, _XStep, _ZStep;
 
-StructuredBuffer<float3> _VesselCoord;
 int _NumVessels;
+
+StructuredBuffer<float3> _VesselCoord;
 int2 _VesselNxNy;
 
 StructuredBuffer<float4> _VesselPath;
 int _VesselPathNumPoints;
- 
 
 float ComputeElevation(Vertex v)
 {
@@ -34,11 +36,13 @@ float ComputeElevation(Vertex v)
     }
     return elevation * 3.0;
 }
-
  
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
 void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 {
+    // Initialize structs.
+    VesselGeometryStruct vesselGeometryInfo = InitializeVesselGeometry(_VesselCoord, _VesselNxNy);
+
     uint id = threadID.x + threadID.y * GROUP_SIZE_X;
     if ((int)id >= _QuadCount) return;
     uint idx1 = id * 6;
@@ -60,8 +64,8 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     v3.position.y = ComputeElevation(v3);
     v6.position.y = ComputeElevation(v6);
 
-    // ----- Triangluar mesh from quads -----
-    // Quads are generated in the order displayed below
+    // ----- Triangular mesh from quads -----
+    // Quads are generated from the 'id' in the order displayed below.
     //    p3, p5        p6
     //       ___________
     //      |\          |
