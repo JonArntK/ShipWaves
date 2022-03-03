@@ -2,50 +2,13 @@
 #define __COMPUTEELEVATIONLOCALFINITEWATER_HLSL__
 
 #include "ComputeElevationLocalDeepWater.hlsl"
+#include "ComputeElevationGlobalFiniteWaterFunctions.hlsl"
+#include "FiniteWaterDispersionRelation.hlsl"
 #include "HLSLMath.hlsl"
+#include "StationaryPhaseFiniteWater.hlsl"
 #include "VesselGeometryStruct.hlsl"
 
-float FiniteWaterDispersionRelationDummy(float k, float fnh, float h, float theta)
-{
-    // k is a guess, used to compute a new k.
-    return pow(fnh, 2) * k * h * pow(cos(theta), 2) - tanh(k * h);
-}
 
-float FiniteWaterDispersionRelationDerivativeDummy(float k, float fnh, float h, float theta)
-{
-    // k is a guess, used to compute a new k. Central differences are used to approximate the derivative.
-    return (FiniteWaterDispersionRelationDummy(k + 0.001, fnh, h, theta) - FiniteWaterDispersionRelationDummy(k - 0.001, fnh, h, theta)) / 0.002;
-}
-
-float FiniteWaterDispersionRelation(float fnh, float h, float theta)
-{
-    // The dispersion relation is solved using Newton's method. Settings are:
-    int max_iter = 50;
-    float epsilon = 1e-6;
-
-    // Initialize for use in Newton's method.
-    float fxn, dfxn;
-
-    // Define initial guess for k, herby denoted as x.
-    float xn = 10.0;  
-
-    for (int n = 0; n < max_iter; n++)
-    {
-        fxn = FiniteWaterDispersionRelationDummy(xn, fnh, h, theta);
-        if (abs(fxn) < epsilon)     // A solution is found.
-        {
-            return xn;
-        }
-        dfxn = FiniteWaterDispersionRelationDerivativeDummy(xn, fnh, h, theta);
-        if (IsClose(dfxn, 0.0))     // Zero derivative. No solution is found.
-        {
-            return 0.0;  
-        }
-        xn = xn - fxn / dfxn;
-    }
-    float k = xn;
-    return k;
-}
 
 float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U, float fnh, float h)
 {
@@ -99,9 +62,44 @@ float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct v
     float2 amp = float2(0.0, -2.0 / PI * pow(k, 2.0) / (1.0 - k0 * h * pow(1 / cos(theta), 2.0) * pow(1.0 / cosh(k * h), 2.0)));
     return c_mul(amp, float2(P, Q));
 }
-float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U)
+float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U, float h)
 {
-    return 1.0;
+    float fnh = Fnh(U, h);
+    float k0 = g / pow(U, 2.0);
+
+    // Compute polar coordinate equivalent to (x, z).
+    float r = sqrt(pow(x, 2.0) + pow(z, 2.0));
+    float alpha = atan2(z, x);
+    alpha = abs(alpha); // Solution is symmetric about the x-axis.
+
+    // If alpha is above the Kelvin half angle, the wave elevation is zero.
+    float deltaBoundary = 0.02; // To avoid singularities at boundary.
+
+    if (abs(alpha) >= PI * 0.5 - deltaBoundary)     // No elevation is present ahead of the vessel.
+    {
+        return float(0.0);
+    }
+
+    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.0), fnh, h, alpha);
+
+    // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
+    float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
+    if (fnh < 1.0)  // Only compute amplitude for the transverse waves when at subcritical depth Froude number.
+    {
+        A1 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.x, U); // float2 since complex -> float2(real, imaginary)
+        A1.x *= pow(abs(cos(theta.x)), 3.0 / 2.0);
+        A1.y *= pow(abs(cos(theta.x)), 3.0 / 2.0);
+        temp1 = c_mul(A1, c_exp(float2(0.0, k0 * r * cos(theta.x - alpha) / pow(cos(theta.x), 2.0) + PI / 4.0)));
+    }
+    float2 A2 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.y, U); // float2 since complex -> float2(real, imaginary)
+    A2.x *= pow(abs(cos(theta.y)), 3.0 / 2.0);
+    A2.y *= pow(abs(cos(theta.y)), 3.0 / 2.0);
+    float2 temp2 = c_mul(A2, c_exp(float2(0.0, k0 * r * cos(theta.y - alpha) / pow(cos(theta.y), 2.0) - PI / 4.0)));
+    
+    float amp = sqrt(2.0 * PI / k0 / r) * pow(abs(1.0 - 9.0 * pow(sin(alpha), 2.0)), -0.25);
+    
+    float zeta = amp * (temp1.x + temp2.x); // Want the real part of the elevation.
+    return zeta;
 }
 
 #endif // __COMPUTEELEVATIONLOCALFINITEWATER_HLSL__

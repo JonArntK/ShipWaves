@@ -68,9 +68,9 @@ float ComputeShipWaveElevationLocalDeepWater(float x, float z, int vesselNum, Ve
     alpha = abs(alpha);     // Solution is symmetric about the x-axis.
 
     // If alpha is above the Kelvin half angle, the wave elevation is zero.
-    float delta_boundary = 0.02;        // To avoid singularities at boundary equal to Kelvin angle.
+    float deltaBoundary = 0.02;        // To avoid singularities at boundary equal to Kelvin angle.
     
-    if (abs(alpha) >= KELVIN_ANGLE)     // In deep water, no elevation is assumed outside the Kelvin angle.
+    if (abs(alpha) >= KELVIN_ANGLE - deltaBoundary)     // In deep water, no elevation is assumed outside the Kelvin angle.
     {
         return float(0.0);
     }

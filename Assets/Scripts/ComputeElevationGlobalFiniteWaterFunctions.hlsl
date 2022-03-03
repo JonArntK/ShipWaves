@@ -9,6 +9,16 @@ float Fnh(float U, float h)
     return U / sqrt(g * h);
 }
 
+// Check if the depth satisfies criteria for finite water.
+bool IsFiniteWater(float fnh)
+{
+    if (fnh > 0.4)
+    {
+        return true;
+    }
+    return false;
+}
+
 // Check if a point (x, z) is inside an ellipse with width 2a, height 2b, rotated at 'angle' radians with center at (x0, z0).
 bool IsPointInEllipse(float x, float z, float x0, float z0, float a, float b, float angle)
 {

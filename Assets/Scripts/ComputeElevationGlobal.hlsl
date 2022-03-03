@@ -8,16 +8,6 @@
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
 
-// Check if the depth satisfies criteria for finite water.
-bool IsFiniteWater(float fnh)
-{
-    if (fnh > 0.4)
-    {
-        return true;
-    }
-    return false;
-}
-
 float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
     // Define number of points in the vessel path.
@@ -26,7 +16,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
     int vesselPathIndexStart = vesselNum * vesselPathNumPoints;
 
     // Initialize values.
-    float X0, Z0, R, U;
+    float X0, Z0, R, U, fnh;
     int index = 0;      // Used to store the index of the correct path point when found.
     bool flag = false;
 
@@ -44,7 +34,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
             + pow(vps.coord[refIndex].y - vps.coord[refIndex].y, 2)) /
             abs(vps.time[refIndex] - vps.time[refIndex + 1]);
 
-        float fnh = Fnh(U, vps.depth[refIndex]);
+        fnh = Fnh(U, vps.depth[refIndex]);
 
         // Check if point is inside the region of disturbance. The region is dependent on the water depth, hence separate functions for deep and finite water depths.
         if ((!IsFiniteWater(fnh) && IsPointInRegionDeepWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex])) ||
@@ -59,7 +49,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
     if (flag)
     {
         // Find point P
-        float XP = vps.coord[vesselPathIndexStart + index].x, ZP = vps.coord[vesselPathIndexStart + index].y, tP = vps.time[vesselPathIndexStart + index], heading = vps.heading[vesselPathIndexStart + index];
+        float XP = vps.coord[vesselPathIndexStart + index].x, ZP = vps.coord[vesselPathIndexStart + index].y, tP = vps.time[vesselPathIndexStart + index], heading = vps.heading[vesselPathIndexStart + index], depth = vps.depth[vesselPathIndexStart + index];
 
         float2 rotatedCoord = RotationMatrix(X, Z, -heading + PI, XP, ZP);   // 
         float XRotated = rotatedCoord.x, ZRotated = rotatedCoord.y;
@@ -67,7 +57,16 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
         float x = (t - tP) * U + (XRotated - XP);
         float z = ZRotated - ZP;
 
-        float y = 1.0;//ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
+        float y;
+        if (IsFiniteWater(fnh))
+        {
+            y = ComputeShipWaveElevationLocalFiniteWater(x, z, vesselNum, vgs, U, depth);
+        }
+        else
+        {
+            y = ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
+        }
+        
 
         return y;
     }
