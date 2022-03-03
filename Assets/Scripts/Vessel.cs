@@ -12,7 +12,7 @@ public class Vessel : MonoBehaviour
 
 
     public int Nx, Nz;
-    public float U = 0;
+    public float U = 0, fnh = 0.3f;
 
     private float3[] vesselCoord;
 
@@ -114,11 +114,12 @@ public class Vessel : MonoBehaviour
         float angle = transform.rotation.eulerAngles.y - 90f;
         float2 newCoord = new float2(transform.position.x, transform.position.z);
         float newHeading = -angle * 2f * Mathf.PI / 360f;
+        float newDepth = MathF.Pow(U, 2f) / 9.81f / fnh;
 
         vesselPathCoordQueue.Enqueue(newCoord);
         vesselPathTimeQueue.Enqueue(Time.time);
         vesselPathHeadingQueue.Enqueue(newHeading);
-        vesselPathDepthQueue.Enqueue(1000f);
+        vesselPathDepthQueue.Enqueue(newDepth);
 
         if (vesselPathTimeQueue.Count >= vesselPathMaxLength)
         {

@@ -8,12 +8,6 @@
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
 
-// Compute depth Froude number.
-float Fnh(float U, float h)
-{
-    return U / sqrt(g * h);
-}
-
 // Check if the depth satisfies criteria for finite water.
 bool IsFiniteWater(float fnh)
 {
@@ -54,7 +48,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
 
         // Check if point is inside the region of disturbance. The region is dependent on the water depth, hence separate functions for deep and finite water depths.
         if ((!IsFiniteWater(fnh) && IsPointInRegionDeepWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex])) ||
-            (IsFiniteWater(fnh) && IsPointInRegionFiniteWater()))
+            (IsFiniteWater(fnh) && IsPointInRegionFiniteWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex], fnh)))
         {
             index = i;
             flag = true;
@@ -73,7 +67,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
         float x = (t - tP) * U + (XRotated - XP);
         float z = ZRotated - ZP;
 
-        float y = ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
+        float y = 1.0;//ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
 
         return y;
     }
