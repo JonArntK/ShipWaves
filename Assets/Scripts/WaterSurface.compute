@@ -35,7 +35,7 @@ float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
     {
         elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, vgs, vps);
     }
-    return elevation * 3.0;
+    return elevation * 3.0; // Multiplied by 3 to make the elevation more visible. Should be removed.
 }
  
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
