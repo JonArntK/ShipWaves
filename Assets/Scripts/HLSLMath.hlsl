@@ -40,6 +40,21 @@ float2 RotationMatrix(float x, float z, float theta, float x0, float z0)
     return float2(xRotated, zRotated);
 }
 
+// Convert an index in 1D to 3D.
+int3 Matrix1DTo3D(int index, int D1, int D2, int D3)
+{
+    int x = (int) Mod(index, D1);
+    int y = (int) Mod((index - x) / D1, D2);
+    int z = (int) Mod((index - y * D1 - x) / (D1 * D2), D3);
+    return int3(x, y, z);
+}
+
+// Convert an index in 3D to 1D.
+int Matrix3DTo1D(int x, int y, int z, int D1, int D2, int D3)
+{
+    return (int) (x + y * D1 + z * D1 * D2);
+}
+
 // Complex number operations.
 float2 c_add(float2 c1, float2 c2)
 {

@@ -12,7 +12,7 @@ public class Vessel : MonoBehaviour
 
 
     public int Nx, Nz;
-    public float U = 0, fnh = 0.3f;
+    public float U = 0, fnh = 0.3f, fn;
 
     private float3[] vesselCoord;
 
@@ -61,6 +61,7 @@ public class Vessel : MonoBehaviour
         }
 
         UpdateVesselPath();
+        fn = U / Mathf.Sqrt(9.81f * L);
     }
 
     // Vessel geometry.

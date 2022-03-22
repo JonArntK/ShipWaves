@@ -62,7 +62,7 @@ float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct v
     float2 amp = float2(0.0, -2.0 / PI * pow(k, 2.0) / (1.0 - k0 * h * pow(1 / cos(theta), 2.0) * pow(1.0 / cosh(k * h), 2.0)));
     return c_mul(amp, float2(P, Q));
 }
-float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U, float h)
+float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U, float h, VesselPathStruct vps)
 {
     float fnh = Fnh(U, h);
     float k0 = g / pow(U, 2.0);
@@ -80,7 +80,7 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
         return float(0.0);
     }
 
-    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.0), fnh, h, alpha);
+    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha);
 
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
     float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);

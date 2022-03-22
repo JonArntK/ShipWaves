@@ -1399,6 +1399,7 @@ MonoBehaviour:
   vesselGOs:
   - {fileID: 131109504}
   - {fileID: 1005208967}
+  StationaryPointsCS: {fileID: 7200000, guid: 3b656bdc7d9b4184cbc4784a4a629930, type: 3}
 --- !u!1 &1409936224
 GameObject:
   m_ObjectHideFlags: 0

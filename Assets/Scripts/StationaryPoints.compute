@@ -1,0 +1,40 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel ComputeStationaryPointsKernel
+
+#include "HLSLMath.hlsl"
+#include "StationaryPhaseFiniteWater.hlsl"
+
+#define GROUP_SIZE_X 64
+#define GROUP_SIZE_Y 1
+#define GROUP_SIZE_Z 1
+
+RWStructuredBuffer<float2> _FiniteWaterStationaryPoints;
+float4 _FnhInfo, _HInfo, _AlphaInfo;
+int _BufferLength;
+
+
+
+float3 GetParams(uint id)
+{
+    int3 indices = Matrix1DTo3D(id, _FnhInfo.w, _HInfo.w, _AlphaInfo.w);
+
+    float fnh = _FnhInfo.x + indices.x * _FnhInfo.z;
+    float h = _HInfo.x + indices.y * _HInfo.z;
+    float alpha = _AlphaInfo.x + indices.z * _AlphaInfo.z;
+
+    return float3(fnh, h, alpha);
+}
+
+[numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
+void ComputeStationaryPointsKernel(uint3 threadID : SV_DispatchThreadID)
+{
+    uint id = threadID.x + threadID.y * GROUP_SIZE_X;
+    if ((int) id >= _BufferLength) return;
+
+    float3 params = GetParams(id);
+    
+    float2 thetaStationary = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.0),
+        params.x, params.y, params.z);
+
+    _FiniteWaterStationaryPoints[id] = thetaStationary;
+}

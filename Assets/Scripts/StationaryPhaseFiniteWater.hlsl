@@ -2,6 +2,7 @@
 #define __STATIONARYPHASEFINITEWATER_HLSL__
 
 #include "FiniteWaterDispersionRelation.hlsl"
+#include "VesselPathStruct.hlsl"
 
 float G(float theta, float fnh, float h, float alpha)
 {
@@ -59,6 +60,35 @@ float2 GetPointsOfStationaryPhaseFiniteWater(float2 thetaInterval, float fnh, fl
         dGPrev = dGCurrent;
     }
     return thetaStationary;
+}
+
+
+int GetIndex(float value, float4 info)
+{
+    int index = (int) ((value - info.x) / info.z) - 1;
+
+    if (index < 0)
+    {
+        return 0;
+    }
+    else if (index >= info.w)
+    {
+        return info.w - 1;
+    }
+    else
+    {
+        return index;
+    }
+}
+
+float2 GetPointsOfStationaryPhaseFiniteWaterBuffer(VesselPathStruct vps, float fnh, float h, float alpha)
+{
+    int fnhIndex = GetIndex(fnh, vps.fnhInfo);
+    int hIndex = GetIndex(h, vps.hInfo);
+    int alphaIndex = GetIndex(alpha, vps.alphaInfo);
+
+    int index = Matrix3DTo1D(fnhIndex, hIndex, alphaIndex, vps.fnhInfo.w, vps.hInfo.w, vps.alphaInfo.w);
+    return vps.finiteWaterStationaryPoints[index];
 }
 
 #endif // __STATIONARYPHASEFINITEWATER_HLSL__

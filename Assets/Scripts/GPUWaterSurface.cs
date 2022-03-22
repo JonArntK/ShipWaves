@@ -25,13 +25,16 @@ public class GPUWaterSurface : MonoBehaviour
     private ComputeBuffer vesselCoord, vesselPathCoord, vesselPathTime, vesselPathHeading, vesselPathDepth;
     private float time, vesselPathDeltaTime = 0.01f;
 
+    [SerializeField] ComputeShader StationaryPointsCS;
+    private ComputeBuffer finiteWaterStationaryPoints;
 
     static readonly int
         vesselCoordId = Shader.PropertyToID("_VesselCoord"),
         vesselPathCoordId = Shader.PropertyToID("_VesselPathCoord"),
         vesselPathTimeId = Shader.PropertyToID("_VesselPathTime"),
         vesselPathHeadingId = Shader.PropertyToID("_VesselPathHeading"),
-        vesselPathDepthId = Shader.PropertyToID("_VesselPathDepth");
+        vesselPathDepthId = Shader.PropertyToID("_VesselPathDepth"),
+        finiteWaterStationaryPointsId = Shader.PropertyToID("_FiniteWaterStationaryPoints");
 
     private void Update()
     {
@@ -184,6 +187,8 @@ public class GPUWaterSurface : MonoBehaviour
     private void Start()
     {
         SetVessel();
+
+        ComputeFiniteWaterStationaryPoints();
     }
 
     private void SetVessel()
@@ -206,7 +211,7 @@ public class GPUWaterSurface : MonoBehaviour
 
             float3[] points = vessels[i].GetVesselCoord();
 
-            // Assign data to ComputeBuffer. 'computeBufferStartIndex' is dependent on vessel number, enabling mulitple vessels.
+            // Assign data to ComputeBuffer. 'computeBufferStartIndex' is dependent on vessel number, enabling multiple vessels.
             vesselCoord.SetData(points, 0, i * vesselCoordLength, points.Length);    
         }
 
@@ -214,5 +219,52 @@ public class GPUWaterSurface : MonoBehaviour
 
         WaterSurfaceCS.SetInt("_NumVessels", numVessels);
         WaterSurfaceCS.SetInts("_VesselNxNy", vessels[0].GetVesselNx(), vessels[0].GetVesselNy());   // Defined as equal for all vessels.
+    }
+
+    private void ComputeFiniteWaterStationaryPoints()
+    {
+        float2 fnhInterval = new float2(0.4f, 2f);    // Deep water for Fnh < 0.4. Shallow water for Fnh > 2.0.
+        float2 hInterval = new float2(2f, 108f);    // Assuming U_max == 13 m/s ~= 25 knop -> h_max becomes 108 m for Fnh = 0.4.
+        float2 alphaInterval = new float2(0, MathF.PI / 2f);
+
+        float fnhStep = 0.1f;
+        float hStep = 5f;
+        float alphaStep = MathF.PI / 180f;
+
+        int fnhSize = (int)((fnhInterval.y - fnhInterval.x) / fnhStep);
+        int hSize = (int)((hInterval.y - hInterval.x) / hStep);
+        int alphaSize = (int)((alphaInterval.y - alphaInterval.x) / alphaStep);
+
+        fnhStep = (fnhInterval.y - fnhInterval.x) / fnhSize;
+        hStep = (hInterval.y - hInterval.x) / hSize;
+        alphaStep = (alphaInterval.y - alphaInterval.x) / alphaSize;
+
+        finiteWaterStationaryPoints = new ComputeBuffer(fnhSize * hSize * alphaSize, 2 * sizeof(float));
+
+        float2[] test = new float2[fnhSize * hSize * alphaSize];
+        //finiteWaterStationaryPoints.GetData(test);
+
+        finiteWaterStationaryPoints.SetData(test);
+
+
+        StationaryPointsCS.SetInt("_BufferLength", fnhSize * hSize * alphaSize);
+        StationaryPointsCS.SetFloats("_FnhInfo", fnhInterval.x, fnhInterval.y, fnhStep, (float)fnhSize);
+        StationaryPointsCS.SetFloats("_HInfo", hInterval.x, hInterval.y, hStep, (float)hSize);
+        StationaryPointsCS.SetFloats("_AlphaInfo", alphaInterval.x, alphaInterval.y, alphaStep, (float)alphaSize);
+        StationaryPointsCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
+
+        StationaryPointsCS.Dispatch(0, (fnhSize * hSize * alphaSize + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
+
+        finiteWaterStationaryPoints.GetData(test);
+        for (int i = 2340; i < 2350; i++)
+        {
+            Debug.Log(i + " // " + test[i]);
+        }
+
+
+        WaterSurfaceCS.SetFloats("_FnhInfo", fnhInterval.x, fnhInterval.y, fnhStep, (float)fnhSize);
+        WaterSurfaceCS.SetFloats("_HInfo", hInterval.x, hInterval.y, hStep, (float)hSize);
+        WaterSurfaceCS.SetFloats("_AlphaInfo", alphaInterval.x, alphaInterval.y, alphaStep, (float)alphaSize);
+        WaterSurfaceCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
     }
 }

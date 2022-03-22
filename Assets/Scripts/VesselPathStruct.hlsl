@@ -9,11 +9,16 @@ struct VesselPathStruct
     StructuredBuffer<float> time;
     StructuredBuffer<float> heading;
     StructuredBuffer<float> depth;
+
+    // Finite water info
+    StructuredBuffer<float2> finiteWaterStationaryPoints;
+    float4 fnhInfo, hInfo, alphaInfo;
 };
 
 // Initialize VesselPathStruct
 VesselPathStruct InitializeVesselPath(int numPoints, StructuredBuffer<float2> coord, 
-    StructuredBuffer<float> time, StructuredBuffer<float> heading, StructuredBuffer<float> depth)
+    StructuredBuffer<float> time, StructuredBuffer<float> heading, StructuredBuffer<float> depth,
+    StructuredBuffer<float2> finiteWaterStationaryPoints, float4 fnhInfo, float4 hInfo, float4 alphaInfo)
 {
     VesselPathStruct vps;
     vps.numPoints = numPoints;
@@ -21,6 +26,12 @@ VesselPathStruct InitializeVesselPath(int numPoints, StructuredBuffer<float2> co
     vps.time = time;
     vps.heading = heading;
     vps.depth = depth;
+
+    vps.finiteWaterStationaryPoints = finiteWaterStationaryPoints;
+    vps.fnhInfo = fnhInfo;
+    vps.hInfo = hInfo;
+    vps.alphaInfo = alphaInfo;
+
     return vps;
 }
 

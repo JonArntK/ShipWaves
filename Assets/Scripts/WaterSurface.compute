@@ -28,6 +28,9 @@ StructuredBuffer<float2> _VesselPathCoord;
 StructuredBuffer<float> _VesselPathTime, _VesselPathHeading, _VesselPathDepth;
 int _VesselPathNumPoints;
 
+StructuredBuffer<float2> _FiniteWaterStationaryPoints;
+float4 _FnhInfo, _HInfo, _AlphaInfo;
+
 float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
     float elevation = 0;
@@ -43,7 +46,8 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 {
     // Initialize structs.
     VesselGeometryStruct vesselGeometryInfo = InitializeVesselGeometry(_VesselCoord, _VesselNxNy);
-    VesselPathStruct vesselPathInfo = InitializeVesselPath(_VesselPathNumPoints, _VesselPathCoord, _VesselPathTime, _VesselPathHeading, _VesselPathDepth);
+    VesselPathStruct vesselPathInfo = InitializeVesselPath(_VesselPathNumPoints, _VesselPathCoord, _VesselPathTime, _VesselPathHeading, _VesselPathDepth,
+        _FiniteWaterStationaryPoints, _FnhInfo, _HInfo, _AlphaInfo);
 
     uint id = threadID.x + threadID.y * GROUP_SIZE_X;
     if ((int)id >= _QuadCount) return;
