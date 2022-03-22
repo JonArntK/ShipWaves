@@ -79,8 +79,8 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     {
         return float(0.0);
     }
-
-    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha);
+    
+    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.0), fnh, h, alpha);
 
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
     float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);

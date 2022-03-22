@@ -67,7 +67,6 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
             y = ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
         }
         
-
         return y;
     }
     else

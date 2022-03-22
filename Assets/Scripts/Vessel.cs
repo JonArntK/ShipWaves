@@ -115,7 +115,7 @@ public class Vessel : MonoBehaviour
         float angle = transform.rotation.eulerAngles.y - 90f;
         float2 newCoord = new float2(transform.position.x, transform.position.z);
         float newHeading = -angle * 2f * Mathf.PI / 360f;
-        float newDepth = MathF.Pow(U, 2f) / 9.81f / fnh;
+        float newDepth = MathF.Pow(U / fnh, 2f) / 9.81f;
 
         vesselPathCoordQueue.Enqueue(newCoord);
         vesselPathTimeQueue.Enqueue(Time.time);
