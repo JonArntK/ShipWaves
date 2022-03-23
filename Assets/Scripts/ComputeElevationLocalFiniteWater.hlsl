@@ -82,9 +82,7 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
         return float(0.0);
     }
     
-    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5, 0.2), fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
-
-    //theta.y = -PI / 2 + 0.4;
+    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5, 0.1), fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
 
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
     float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
@@ -93,16 +91,16 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
         A1 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.x, U, fnh); // float2 since complex -> float2(real, imaginary)
         A1.x *= pow(abs(cos(theta.x)), 3.0 / 2.0);
         A1.y *= pow(abs(cos(theta.x)), 3.0 / 2.0);
-        temp1 = c_mul(A1, c_exp(float2(0.0, k0 * r * cos(theta.x - alpha) / pow(cos(theta.x), 2.0) + PI / 4.0)));
+        temp1 = c_mul(A1, c_exp(float2(0.0, k0 * r * cos(theta.x - alpha) / pow(cos(theta.x), 2.0) + PI / 4.0)));           // FEIL!
     }
     float2 A2 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.y, U, fnh); // float2 since complex -> float2(real, imaginary)
     A2.x *= pow(abs(cos(theta.y)), 3.0 / 2.0);
     A2.y *= pow(abs(cos(theta.y)), 3.0 / 2.0);
-    float2 temp2 = c_mul(A2, c_exp(float2(0.0, k0 * r * cos(theta.y - alpha) / pow(cos(theta.y), 2.0) - PI / 4.0)));
+    float2 temp2 = c_mul(A2, c_exp(float2(0.0, k0 * r * cos(theta.y - alpha) / pow(cos(theta.y), 2.0) - PI / 4.0)));        // FEIL!
     
     float amp = sqrt(2.0 * PI / k0 / r) * pow(abs(1.0 - 9.0 * pow(sin(alpha), 2.0)), -0.25);
     
-    float zeta = amp * (temp1.x + temp2.x); // Want the real part of the elevation. 
+    float zeta = amp * (temp1.x); // Want the real part of the elevation. 
     return zeta;
 }
 

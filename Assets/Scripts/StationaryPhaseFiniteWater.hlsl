@@ -16,6 +16,12 @@ float dG(float theta, float fnh, float h, float alpha)
     return (G(theta + 0.001, fnh, h, alpha) - G(theta - 0.001, fnh, h, alpha)) / 0.002;
 }
 
+float ddG(float theta, float fnh, float h, float alpha)
+{
+    // Using central differences to approximate the derivative of G.
+    return (G(theta + 0.001, fnh, h, alpha) - dG(theta, fnh, h, alpha) + dG(theta - 0.001, fnh, h, alpha)) / pow(0.002, 2);
+}
+
 float2 GetPointsOfStationaryPhaseFiniteWater(float2 thetaInterval, float fnh, float h, float alpha)
 {
 
@@ -36,7 +42,7 @@ float2 GetPointsOfStationaryPhaseFiniteWater(float2 thetaInterval, float fnh, fl
     for (int i = 0; i < N; i++)
     {
         thetaCurrent += tol;
-        dGCurrent = dG(thetaCurrent, fnh, h, alpha); // Think there is something wrong with dG.
+        dGCurrent = dG(thetaCurrent, fnh, h, alpha);
         
         if (nRoots == 1 && thetaCurrent < acos(1 / fnh))
         {
