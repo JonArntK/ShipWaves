@@ -10,8 +10,10 @@
 
 
 
-float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U, float fnh, float h)
+float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U, float fnh)
 {
+    float h = pow(U, 2) / fnh / g;
+
     int vesselNx = vgs.vesselNxNy[0];
     int vesselNy = vgs.vesselNxNy[1];
 
@@ -31,7 +33,7 @@ float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct v
     float omegaNy = (exp(-K) - 1.0 + K) / pow(K, 2.0);
     float omegaJ = (exp(K) + exp(-K) - 2.0) / pow(K, 2.0);
 
-    float K2 = k * cos(theta * dx);
+    float K2 = k * cos(theta) * dx;
     float omegaEven = (3.0 * K2 + K2 * cos(2.0 * K2) - 2.0 * sin(2.0 * K2)) / pow(K2, 3.0);
     float omegaOdd = 4.0 * (sin(K2) - K2 * cos(K2)) / pow(K2, 3.0);
 
@@ -40,22 +42,22 @@ float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct v
         int refIndex = vesselCoordIndexStart + i * vesselNy;
 
         float F = 0.0;
-        F += omega0 * vgs.coord[refIndex + 0].z * cosh(k * (vgs.coord[refIndex + 0].y + h) / cosh(k * h)) * dy;
-        F += omegaNy * vgs.coord[refIndex + vesselNy - 1].z * cosh(k * (vgs.coord[refIndex + vesselNy - 1].y + h) / cosh(k * h)) * dy;
+        F += omega0 * vgs.coord[refIndex + 0].z * cosh(k * (vgs.coord[refIndex + 0].y + h)) / cosh(k * h) * dy;
+        F += omegaNy * vgs.coord[refIndex + vesselNy - 1].z * cosh(k * (vgs.coord[refIndex + vesselNy - 1].y + h)) / cosh(k * h) * dy;
         for (int j = 1; j < vesselNy - 1; j++)
         {
-            F += omegaJ * vgs.coord[refIndex + j].z * cosh(k * (vgs.coord[refIndex + j].y + h) / cosh(k * h)) * dy;
+            F += omegaJ * vgs.coord[refIndex + j].z * cosh(k * (vgs.coord[refIndex + j].y + h)) / cosh(k * h) * dy;
         }
 
         if (Mod(i, 2) == 0.0)
         {
-            P += omegaEven * F * cos(k * vgs.coord[refIndex].x / cos(theta)) * dx;
-            Q += omegaEven * F * sin(k * vgs.coord[refIndex].x / cos(theta)) * dx;
+            P += omegaEven * F * cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            Q += omegaEven * F * sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
         }
         else
         {
-            P += omegaOdd * F * cos(k * vgs.coord[refIndex].x / cos(theta)) * dx;
-            Q += omegaOdd * F * sin(k * vgs.coord[refIndex].x / cos(theta)) * dx;
+            P += omegaOdd * F * cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            Q += omegaOdd * F * sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
         }
     }
 
@@ -75,30 +77,32 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     // If alpha is above the Kelvin half angle, the wave elevation is zero.
     float deltaBoundary = 0.02; // To avoid singularities at boundary.
 
-    if (abs(alpha) >= PI * 0.5 - deltaBoundary)     // No elevation is present ahead of the vessel.
+    if (alpha >= PI * 0.5 - deltaBoundary)     // No elevation is present ahead of the vessel.
     {
         return float(0.0);
     }
     
-    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.0), fnh, h, alpha);
+    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5, 0.2), fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
+
+    //theta.y = -PI / 2 + 0.4;
 
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
     float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
     if (fnh < 1.0)  // Only compute amplitude for the transverse waves when at subcritical depth Froude number.
     {
-        A1 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.x, U); // float2 since complex -> float2(real, imaginary)
+        A1 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.x, U, fnh); // float2 since complex -> float2(real, imaginary)
         A1.x *= pow(abs(cos(theta.x)), 3.0 / 2.0);
         A1.y *= pow(abs(cos(theta.x)), 3.0 / 2.0);
         temp1 = c_mul(A1, c_exp(float2(0.0, k0 * r * cos(theta.x - alpha) / pow(cos(theta.x), 2.0) + PI / 4.0)));
     }
-    float2 A2 = ComplexAmplitudeFunctionDeepWater(vesselNum, vgs, theta.y, U); // float2 since complex -> float2(real, imaginary)
+    float2 A2 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.y, U, fnh); // float2 since complex -> float2(real, imaginary)
     A2.x *= pow(abs(cos(theta.y)), 3.0 / 2.0);
     A2.y *= pow(abs(cos(theta.y)), 3.0 / 2.0);
     float2 temp2 = c_mul(A2, c_exp(float2(0.0, k0 * r * cos(theta.y - alpha) / pow(cos(theta.y), 2.0) - PI / 4.0)));
     
     float amp = sqrt(2.0 * PI / k0 / r) * pow(abs(1.0 - 9.0 * pow(sin(alpha), 2.0)), -0.25);
     
-    float zeta = amp * (temp1.x + temp2.x); // Want the real part of the elevation.
+    float zeta = amp * (temp1.x + temp2.x); // Want the real part of the elevation. 
     return zeta;
 }
 

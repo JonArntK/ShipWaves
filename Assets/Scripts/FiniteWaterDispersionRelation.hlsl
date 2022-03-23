@@ -5,7 +5,7 @@
 
 float FiniteWaterDispersionRelationDummy(float k, float fnh, float h, float theta)
 {
-    // k is a guess, used to compute a new k.
+    // The 'k' provided is a guess, used to compute a new and updated value for 'k'.
     return pow(fnh, 2) * k * h * pow(cos(theta), 2) - tanh(k * h);
 }
 

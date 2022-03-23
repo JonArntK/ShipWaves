@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 262.38354, g: 325.1084, b: 430.30957, a: 1}
+  m_IndirectSpecularColor: {r: 261.8028, g: 324.33075, b: 429.2505, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -345,7 +345,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
       propertyPath: m_Name
-      value: Gislinge_Boat
+      value: Boat Finite Water
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d27e1164d9c7c3c438ecd771f786c8dc, type: 3}
@@ -369,7 +369,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Nx: 10
   Nz: 4
-  U: 0
+  U: 6
   fnh: 0.96
   fn: 0
 --- !u!4 &131109506 stripped
@@ -1160,7 +1160,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
       propertyPath: m_Name
-      value: Gislinge_Boat (1)
+      value: Boat Deep Water
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}

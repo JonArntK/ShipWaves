@@ -241,12 +241,6 @@ public class GPUWaterSurface : MonoBehaviour
 
         finiteWaterStationaryPoints = new ComputeBuffer(fnhSize * hSize * alphaSize, 2 * sizeof(float));
 
-        float2[] test = new float2[fnhSize * hSize * alphaSize];
-        //finiteWaterStationaryPoints.GetData(test);
-
-        finiteWaterStationaryPoints.SetData(test);
-
-
         StationaryPointsCS.SetInt("_BufferLength", fnhSize * hSize * alphaSize);
         StationaryPointsCS.SetFloats("_FnhInfo", fnhInterval.x, fnhInterval.y, fnhStep, (float)fnhSize);
         StationaryPointsCS.SetFloats("_HInfo", hInterval.x, hInterval.y, hStep, (float)hSize);
@@ -254,13 +248,6 @@ public class GPUWaterSurface : MonoBehaviour
         StationaryPointsCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
 
         StationaryPointsCS.Dispatch(0, (fnhSize * hSize * alphaSize + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
-
-        finiteWaterStationaryPoints.GetData(test);
-        for (int i = 2340; i < 2350; i++)
-        {
-            Debug.Log(i + " // " + test[i]);
-        }
-
 
         WaterSurfaceCS.SetFloats("_FnhInfo", fnhInterval.x, fnhInterval.y, fnhStep, (float)fnhSize);
         WaterSurfaceCS.SetFloats("_HInfo", hInterval.x, hInterval.y, hStep, (float)hSize);

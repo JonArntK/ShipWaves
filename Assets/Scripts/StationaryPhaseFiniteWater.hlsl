@@ -18,25 +18,31 @@ float dG(float theta, float fnh, float h, float alpha)
 
 float2 GetPointsOfStationaryPhaseFiniteWater(float2 thetaInterval, float fnh, float h, float alpha)
 {
+
     int nRoots = 2;
     if (fnh > 1.0)
     {
         nRoots = 1;
     }
 
-    float tol = 1e-3;
+    float tol = 0.001;
     int N = (thetaInterval.y - thetaInterval.x) / tol;
-    float2 thetaStationary = float2(0.0, 0.0);
+    float2 thetaStationary = float2(1.0, 1.0);
 
-    float thetaCurrent, dGCurrent, dGPrev = dG(thetaInterval.x, fnh, h, alpha);
-    bool flag = false;  // Used when two roots are to be found.
 
-    for (int i = 1; i < N; i++)
+    float thetaCurrent = thetaInterval.x, dGCurrent, dGPrev = dG(thetaInterval.x, fnh, h, alpha);
+    bool flag = false; // Used when two roots are to be found.
+
+    for (int i = 0; i < N; i++)
     {
-        thetaCurrent = thetaInterval.x + i * tol;
-        dGCurrent = dG(thetaCurrent, fnh, h, alpha);
+        thetaCurrent += tol;
+        dGCurrent = dG(thetaCurrent, fnh, h, alpha); // Think there is something wrong with dG.
         
-        if (dGPrev * dGCurrent < 0.0)
+        if (nRoots == 1 && thetaCurrent < acos(1 / fnh))
+        {
+            return float2(1.0, 1.0);
+        }
+        else if (dGPrev * dGCurrent < 0.0)
         {
             if (nRoots == 1)
             {
@@ -46,13 +52,13 @@ float2 GetPointsOfStationaryPhaseFiniteWater(float2 thetaInterval, float fnh, fl
             {
                 if (flag)
                 {
-                    thetaStationary.y = thetaCurrent - tol / 2.0;
+                    thetaStationary.x = thetaCurrent - tol / 2.0;
                     return thetaStationary;
                 }
                 else
                 {
                     flag = true;
-                    thetaStationary.x = thetaCurrent - tol / 2.0;
+                    thetaStationary.y = thetaCurrent - tol / 2.0;
                 }
             }
         }
