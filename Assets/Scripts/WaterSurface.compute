@@ -1,5 +1,7 @@
 #pragma kernel ComputeWaterSurfaceKernel
 
+#include "FiniteWaterDispersionRelation.hlsl"   // For testing
+
 #include "ComputeElevationGlobal.hlsl"
 #include "GenerateMesh.hlsl"
 #include "VesselGeometryStruct.hlsl"
@@ -14,6 +16,8 @@
 RWByteAddressBuffer _VertexBuffer;
 RWByteAddressBuffer _NormalBuffer;
 RWByteAddressBuffer _TexcoordBuffer;
+
+RWStructuredBuffer<double2> _Test;
 
 // Other definitions.
 int _QuadCount, _XQuadCount, _ZQuadCount, _XOrigin, _ZOrigin;
@@ -41,6 +45,143 @@ float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
     return elevation * 3.0; // Multiplied by 3 to make the elevation more visible. Should be removed.
 }
  
+void Test(VesselGeometryStruct vgs)
+{
+    static int N = 1;
+    
+
+    double fnh = 0.9;
+    double h = 4.53052;
+    double r = 5.0, U = 6.0;
+    double alpha = 30, dalpha = 1;
+    double theta = -0.161, dtheta = 0.01;
+    int vesselNx = vgs.vesselNxNy[0], vesselNy = vgs.vesselNxNy[1];
+
+    double2 thetaInterval = double2(-PI / 2.0 + 0.02, 0.0);
+    double tol = (double) ((thetaInterval.y - thetaInterval.x) / N), thetaCurrent;
+
+    //theta *= PI / (double) 180.0;
+    //dtheta *= PI / (double) 180.0;
+    alpha *= PI / (double) 180.0;
+    dalpha *= PI / (double) 180.0;
+
+
+    for (int i = 0; i < N; i++)
+    {
+        //_Test[i].x = dG(GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).y - 0.0005, fnh, h, alpha); //GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).x;
+        //double2 theta = GetPointsOfStationaryPhaseFiniteWater2(fnh, h, alpha);
+        double2 theta1 = theta + 0.001; // = GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha);
+        //_Test[i].y = dG(GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).y + 0.0005, fnh, h, alpha);
+
+        //_Test[i].x = theta.x;
+        //_Test[i].y = ddG(theta, fnh, h, alpha);
+        
+        //thetaCurrent = thetaInterval.x + (double) i * tol;
+        //_Test[i].x = thetaCurrent - tol / 2.0;
+        //_Test[i].y = dG(thetaCurrent, fnh, h, alpha) * dG(thetaCurrent - tol, fnh, h, alpha) < 0.0;
+        
+        //float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
+        //float2 A11 = float2(0.0, 0.0), temp11 = float2(0.0, 0.0);
+        
+        //A1 = ComplexAmplitudeFunctionFiniteWater(0, vgs, theta.x, U, fnh); // float2 since complex -> float2(real, imaginary)
+        //A1.x *= sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        //A1.y *= sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        //temp1 = c_mul(A1, c_exp(float2(0.0, r * G(theta.x, fnh, h, alpha) + PI / 4.0)));
+        
+        //A11 = ComplexAmplitudeFunctionFiniteWater(0, vgs, theta1.x, U, fnh); // float2 since complex -> float2(real, imaginary)
+        //A11.x *= sqrt(2.0 * PI / (r * abs(ddG(theta1.x, fnh, h, alpha))));
+        //A11.y *= sqrt(2.0 * PI / (r * abs(ddG(theta1.x, fnh, h, alpha))));
+        //temp11 = c_mul(A11, c_exp(float2(0.0, r * G(theta1.x, fnh, h, alpha) + PI / 4.0)));
+        
+        
+        if (theta.x > 0.0)
+        {
+            _Test[i].x = 9;
+            _Test[i].y = 9;
+        }
+        else
+        {
+            //_Test[i].x = theta.x + fnh + h + alpha;
+            _Test[i].y = ddG(theta.x, fnh, h, alpha); //FiniteWaterDispersionRelation(fnh, h, theta); //G(theta.x, fnh, h, alpha); // - 
+
+        }
+        
+        
+        theta += dtheta;
+        //alpha += dalpha;
+    }
+    
+}
+void Test2(VesselGeometryStruct vgs)
+{
+    static int N = 1;
+    
+
+    double fnh = 0.9;
+    double h = 4.53052;
+    double r = 5.0, U = 6.0;
+    double alpha = 30, dalpha = 1;
+    double theta = -0.161, dtheta = 0.01;
+    int vesselNx = vgs.vesselNxNy[0], vesselNy = vgs.vesselNxNy[1];
+
+    double2 thetaInterval = double2(-PI / 2.0 + 0.02, 0.0);
+    double tol = (double) ((thetaInterval.y - thetaInterval.x) / N), thetaCurrent;
+
+    //theta *= PI / (double) 180.0;
+    //dtheta *= PI / (double) 180.0;
+    alpha *= PI / (double) 180.0;
+    dalpha *= PI / (double) 180.0;
+
+
+    [unroll(N)] for (int i = 0; i < N; i++)
+    {
+        //_Test[i].x = dG(GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).y - 0.0005, fnh, h, alpha); //GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).x;
+        //double2 theta = GetPointsOfStationaryPhaseFiniteWater2(fnh, h, alpha);
+        double2 theta1 = theta + 0.001; // = GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha);
+        //_Test[i].y = dG(GetPointsOfStationaryPhaseFiniteWater(thetaInterval, fnh, h, alpha).y + 0.0005, fnh, h, alpha);
+
+        //_Test[i].x = theta.x;
+        //_Test[i].y = ddG(theta, fnh, h, alpha);
+        
+        //thetaCurrent = thetaInterval.x + (double) i * tol;
+        //_Test[i].x = thetaCurrent - tol / 2.0;
+        //_Test[i].y = dG(thetaCurrent, fnh, h, alpha) * dG(thetaCurrent - tol, fnh, h, alpha) < 0.0;
+        
+        //float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
+        //float2 A11 = float2(0.0, 0.0), temp11 = float2(0.0, 0.0);
+        
+        //A1 = ComplexAmplitudeFunctionFiniteWater(0, vgs, theta.x, U, fnh); // float2 since complex -> float2(real, imaginary)
+        //A1.x *= sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        //A1.y *= sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        //temp1 = c_mul(A1, c_exp(float2(0.0, r * G(theta.x, fnh, h, alpha) + PI / 4.0)));
+        
+        //A11 = ComplexAmplitudeFunctionFiniteWater(0, vgs, theta1.x, U, fnh); // float2 since complex -> float2(real, imaginary)
+        //A11.x *= sqrt(2.0 * PI / (r * abs(ddG(theta1.x, fnh, h, alpha))));
+        //A11.y *= sqrt(2.0 * PI / (r * abs(ddG(theta1.x, fnh, h, alpha))));
+        //temp11 = c_mul(A11, c_exp(float2(0.0, r * G(theta1.x, fnh, h, alpha) + PI / 4.0)));
+        
+        
+        if (theta.x > 0.0)
+        {
+            _Test[i].x = 9;
+            _Test[i].y = 9;
+        }
+        else
+        {
+            //_Test[i].x = theta.x + fnh + h + alpha;
+            _Test[i].x = ddG(theta.x, fnh, h, alpha);//FiniteWaterDispersionRelation(fnh, h, theta); //G(theta.x, fnh, h, alpha); // 
+
+        }
+        
+        
+        
+        
+        theta += dtheta;
+        //alpha += dalpha;
+    }
+    
+}
+
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
 void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 {
@@ -50,13 +191,14 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
         _FiniteWaterStationaryPoints, _FnhInfo, _HInfo, _AlphaInfo);
 
     uint id = threadID.x + threadID.y * GROUP_SIZE_X;
-    if ((int)id >= _QuadCount) return;
+    if ((int) id >= _QuadCount)
+        return;
     uint idx1 = id * 6;
     uint idx2 = id * 6 + 1;
-    uint idx3 = id * 6 + 2;  
-    uint idx4 = id * 6 + 3;  
-    uint idx5 = id * 6 + 4;  
-    uint idx6 = id * 6 + 5;  
+    uint idx3 = id * 6 + 2;
+    uint idx4 = id * 6 + 3;
+    uint idx5 = id * 6 + 4;
+    uint idx6 = id * 6 + 5;
 
     // Generate quad.
     Vertex v1 = GenerateQuad(idx1, _XQuadCount, _XStep, _ZStep, _XOrigin, _ZOrigin);
@@ -88,4 +230,13 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 
     StoreTriangle(idx1, idx2, idx3, v1, v3, v2, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
     StoreTriangle(idx4, idx5, idx6, v2, v3, v6, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
+
+    //if (int(threadID.x) == 1)
+    //{
+    //    Test(vesselGeometryInfo); // For testing
+    //    Test2(vesselGeometryInfo); // For testing
+    //}
+
+
 }
+

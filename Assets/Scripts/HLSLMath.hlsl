@@ -16,6 +16,24 @@ bool IsClose(float a, float b)
     return false;
 }
 
+float CustomTanh(float x)
+{
+    if (x > 10.0)
+    {
+        return 1.0;
+    }
+    else if (x < -10.0)
+    {
+        return -1.0;
+    }
+    else
+    {
+        return tanh(x);
+    }
+}
+
+
+
 // Custom modulus function for floats.
 float Mod(float x, float y)
 {
@@ -23,6 +41,20 @@ float Mod(float x, float y)
     // being divided. If not, an error is seen for e.g. x = 126, y = 7 -> returning a positive number when 
     // it should be 0 exactly.
     return x - y * floor((x + 0.00001) / y);
+}
+
+bool IsEven(int x)
+{
+    float xf = float(x);
+    while (xf > 0.1)
+    {
+        xf -= 2.0;
+    }
+    
+    if (abs(xf) < 0.1)
+        return true;
+    else
+        return false;
 }
 
 // Standard rotation matrix about point (x0, z0) of given point (x, z).

@@ -28,13 +28,16 @@ public class GPUWaterSurface : MonoBehaviour
     [SerializeField] ComputeShader StationaryPointsCS;
     private ComputeBuffer finiteWaterStationaryPoints;
 
+    private ComputeBuffer Test;
+
     static readonly int
         vesselCoordId = Shader.PropertyToID("_VesselCoord"),
         vesselPathCoordId = Shader.PropertyToID("_VesselPathCoord"),
         vesselPathTimeId = Shader.PropertyToID("_VesselPathTime"),
         vesselPathHeadingId = Shader.PropertyToID("_VesselPathHeading"),
         vesselPathDepthId = Shader.PropertyToID("_VesselPathDepth"),
-        finiteWaterStationaryPointsId = Shader.PropertyToID("_FiniteWaterStationaryPoints");
+        finiteWaterStationaryPointsId = Shader.PropertyToID("_FiniteWaterStationaryPoints"),
+        testId = Shader.PropertyToID("_Test");
 
     private void Update()
     {
@@ -98,7 +101,13 @@ public class GPUWaterSurface : MonoBehaviour
 
         UpdateVesselPath();
 
+
+        //SetVessel();
+        //TestFunctionSetup();
+
         WaterSurfaceCS.Dispatch(0, (QuadCount + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
+
+        //TestFunctionRead();
 
         vesselPathCoord.Release();
         vesselPathTime.Release();
@@ -136,6 +145,9 @@ public class GPUWaterSurface : MonoBehaviour
         vesselPathTime = null;
         vesselPathHeading = null;
         vesselPathDepth = null;
+
+        //finiteWaterStationaryPoints.Release();
+        //finiteWaterStationaryPoints = null;
     }
 
     private void UpdateVesselPath()
@@ -188,7 +200,7 @@ public class GPUWaterSurface : MonoBehaviour
     {
         SetVessel();
 
-        ComputeFiniteWaterStationaryPoints();
+        //ComputeFiniteWaterStationaryPoints();
     }
 
     private void SetVessel()
@@ -201,7 +213,7 @@ public class GPUWaterSurface : MonoBehaviour
         int vesselCoordLength = vesselGOs[0].GetComponent<Vessel>().GetVesselNx() * vesselGOs[0].GetComponent<Vessel>().GetVesselNy();
 
         // Initialize computebuffer
-        vesselCoord = new ComputeBuffer(vesselCoordLength * numVessels, 3 * sizeof(float));  // will store a vector of float3 -> size = 3 * sizeof(float).
+        vesselCoord = new ComputeBuffer(vesselCoordLength * numVessels, 3 * sizeof(float));  // will store a vector of float3 -> size = 3 * sizeof(float).    // Useful when debugging
 
 
         // Insert info of each vessel into the computebuffer.
@@ -228,8 +240,8 @@ public class GPUWaterSurface : MonoBehaviour
         float2 alphaInterval = new float2(0, MathF.PI / 2f);
 
         float fnhStep = 0.1f;
-        float hStep = 5f;
-        float alphaStep = MathF.PI / 180f;
+        float hStep = 1f;
+        float alphaStep = MathF.PI / 180f / 100f;
 
         int fnhSize = (int)((fnhInterval.y - fnhInterval.x) / fnhStep);
         int hSize = (int)((hInterval.y - hInterval.x) / hStep);
@@ -254,4 +266,23 @@ public class GPUWaterSurface : MonoBehaviour
         WaterSurfaceCS.SetFloats("_AlphaInfo", alphaInterval.x, alphaInterval.y, alphaStep, (float)alphaSize);
         WaterSurfaceCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
     }
+
+    private void TestFunctionSetup()
+    {
+        int N = 1;
+
+        Test = new ComputeBuffer(N, 2 * sizeof(double));
+
+        WaterSurfaceCS.SetBuffer(0, testId, Test);
+    }
+    private void TestFunctionRead()
+    {
+        int N = 1;
+
+        double2[] test = new double2[N];
+
+        Test.GetData(test);        
+        float a = 2f;
+    }
+
 }

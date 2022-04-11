@@ -14,7 +14,7 @@ float2 ComplexAmplitudeFunctionDeepWater(int vesselNum, VesselGeometryStruct vgs
     int vesselCoordIndexStart = vesselNum * vesselNx * vesselNy;
 
     float dx = vgs.coord[vesselCoordIndexStart + vesselNy].x - vgs.coord[vesselCoordIndexStart + 0].x;
-    float dy = vgs.coord[vesselCoordIndexStart + 1].y - vgs.coord[vesselCoordIndexStart + 0].y;
+    float dy = abs(vgs.coord[vesselCoordIndexStart + 1].y - vgs.coord[vesselCoordIndexStart + 0].y);
     
     float P = 0.0;
     float Q = 0.0;
@@ -35,8 +35,8 @@ float2 ComplexAmplitudeFunctionDeepWater(int vesselNum, VesselGeometryStruct vgs
         int refIndex = vesselCoordIndexStart + i * vesselNy;
 
         float F = 0.0;
-        F += omega0 * vgs.coord[refIndex + 0].z * exp(k0 * vgs.coord[refIndex + 0].y / pow(cos(theta), 2.0)) * dy;
-        F += omegaNy * vgs.coord[refIndex + vesselNy - 1].z * exp(k0 * vgs.coord[refIndex + vesselNy - 1].y / pow(cos(theta), 2.0)) * dy;
+        F += omega0 * vgs.coord[refIndex + vesselNy - 1].z * exp(k0 * vgs.coord[refIndex + vesselNy - 1].y / pow(cos(theta), 2.0)) * dy;
+        F += omegaNy * vgs.coord[refIndex + 0].z * exp(k0 * vgs.coord[refIndex + 0].y / pow(cos(theta), 2.0)) * dy;
         for (int j = 1; j < vesselNy - 1; j++)
         {
             F += omegaJ * vgs.coord[refIndex + j].z * exp(k0 * vgs.coord[refIndex + j].y / pow(cos(theta), 2.0)) * dy;

@@ -58,6 +58,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
         float z = ZRotated - ZP;
 
         float y;
+        
         if (IsFiniteWater(fnh))
         {
             y = ComputeShipWaveElevationLocalFiniteWater(x, z, vesselNum, vgs, U, depth, vps);

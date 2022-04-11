@@ -87,9 +87,9 @@ public class Vessel : MonoBehaviour
             for (int j = 0; j < Nz; j++)
             {
                 float x = -L / 2f + i * dx;
-                float z = -j * dz;
+                float z = j * dz;
                 float y = B / 2f * (1 - Mathf.Pow(z / D, 2)) * (1 - Mathf.Pow(x / (0.5f * L), 2));
-                vesselCoord[Nz * i + j] = new float3(x, z, y);   // Note difference between coordinate system in Unity and defintion. CHANGE THIS LATER!
+                vesselCoord[Nz * i + j] = new float3(x, -z, y);   // Note difference between coordinate system in Unity and defintion. CHANGE THIS LATER!
             }
         }
     }

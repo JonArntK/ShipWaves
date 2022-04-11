@@ -14,6 +14,7 @@ VesselGeometryStruct InitializeVesselGeometry(StructuredBuffer<float3> coord, in
     VesselGeometryStruct vgs;
     vgs.coord = coord;
     vgs.vesselNxNy = vesselNxNy;
+    
     return vgs;
 }
 
