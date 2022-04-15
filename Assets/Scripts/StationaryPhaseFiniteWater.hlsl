@@ -52,7 +52,7 @@ double2 GetPointsOfStationaryPhaseFiniteWater(double2 thetaInterval, double fnh,
     //int N = (int)((thetaInterval.y - thetaInterval.x) / tol);
     double2 thetaStationary = double2(1.0, 1.0);
     
-    int N = 500;
+    int N = 1500;
     double tol = (double) ((thetaInterval.y - thetaInterval.x) / N);
 
 

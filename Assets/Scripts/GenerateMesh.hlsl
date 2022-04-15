@@ -34,9 +34,9 @@ Vertex GenerateQuad(uint id, int _XQuadCount, float _XStep, float _ZStep, int _X
     Vertex vertex;
     float u = Mod(float(id), 2.0); // Local x-position of quad.
     float v = sign(Mod(126.0, Mod(float(id), 6.0) + 6.0)); // Local z-position of quad.
-    float3 localPos = float3(u, 0, v);
+    float3 localPos = float3(u, 0.0, v);
 
-    vertex.position = (localPos + center) * float3(_XStep, 1, _ZStep) + float3(_XOrigin, 0, _ZOrigin); // Assigning position to vertex.
+    vertex.position = (localPos + center) * float3(_XStep, 0.0, _ZStep) + float3((float) _XOrigin, 0, (float) _ZOrigin); // Assigning position to vertex.
     vertex.texcoord = float2(u, v);
     return vertex;
 }

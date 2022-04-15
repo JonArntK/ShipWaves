@@ -6,20 +6,20 @@
 double FiniteWaterDispersionRelationDummy(double k, double fnh, double h, double theta)
 {
     // The 'k' provided is a guess, used to compute a new and updated value for 'k'.
-    return fnh * fnh * k * h * cos(theta) * cos(theta) - (double) CustomTanh(k * h);
+    return (double) fnh * (double) fnh * (double) k * (double) h * (double) cos((float) theta) * (double) cos((float) theta) - (double) CustomTanh((float) k * h);
 }
 
 double FiniteWaterDispersionRelationDerivativeDummy(double k, double fnh, double h, double theta)
 {
     // k is a guess, used to compute a new k. Central differences are used to approximate the derivative.
-    return (FiniteWaterDispersionRelationDummy(k + (double) 1e-3, fnh, h, theta) - FiniteWaterDispersionRelationDummy(k - (double) 1e-3, fnh, h, theta)) / (double) 2e-3;
+    return ((double) FiniteWaterDispersionRelationDummy((double) k + (double) 1e-3, (double) fnh, (double) h, (double) theta) - (double) FiniteWaterDispersionRelationDummy((double) k - (double) 1e-3, (double) fnh, (double) h, (double) theta)) / (double) 2e-3;
 }
 
 double FiniteWaterDispersionRelation(double fnh, double h, double theta)
 {
     // The dispersion relation is solved using Newton's method. Settings are:
     int max_iter = 50;
-    double epsilon = 1e-8;
+    double epsilon = 1e-10;
 
     // Initialize for use in Newton's method.
     double fxn, dfxn;

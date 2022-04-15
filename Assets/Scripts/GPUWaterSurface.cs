@@ -103,11 +103,11 @@ public class GPUWaterSurface : MonoBehaviour
 
 
         //SetVessel();
-        //TestFunctionSetup();
+        TestFunctionSetup();
 
         WaterSurfaceCS.Dispatch(0, (QuadCount + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
 
-        //TestFunctionRead();
+        TestFunctionRead();
 
         vesselPathCoord.Release();
         vesselPathTime.Release();
@@ -269,7 +269,7 @@ public class GPUWaterSurface : MonoBehaviour
 
     private void TestFunctionSetup()
     {
-        int N = 1;
+        int N = 10;
 
         Test = new ComputeBuffer(N, 2 * sizeof(double));
 
@@ -277,7 +277,7 @@ public class GPUWaterSurface : MonoBehaviour
     }
     private void TestFunctionRead()
     {
-        int N = 1;
+        int N = 10;
 
         double2[] test = new double2[N];
 
