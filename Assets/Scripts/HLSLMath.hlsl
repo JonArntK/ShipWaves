@@ -18,6 +18,8 @@ bool IsClose(float a, float b)
 
 float CustomTanh(float x)
 {
+    // Custom tanh function to ensure validity for large absolute values of 'x'.
+    // Built-in 'tanh' returns 0 for large (negative) x.
     if (x > 10.0)
     {
         return 1.0;
@@ -33,10 +35,22 @@ float CustomTanh(float x)
 }
 
 
+float slope(float2 p1, float2 p2)
+{
+    // Returns the slope computed from points p1 and p2 (slope 'a', where 'y = ax + b').
+    return (p1.y - p2.y) / (p1.x - p2.x);
+}
 
-// Custom modulus function for floats.
+float intercept(float2 p1, float slope)
+{
+    // Returns the intercept computed from point p1 and its slope (intercept 'b', where 'y = ax + b').
+    return p1.y - slope * p1.x;
+}
+
 float Mod(float x, float y)
 {
+    // Custom modulus function for floats.
+    
     // Need to account for the floating point precision (32 bit (single type)) by adding 1e-5 to the number
     // being divided. If not, an error is seen for e.g. x = 126, y = 7 -> returning a positive number when 
     // it should be 0 exactly.

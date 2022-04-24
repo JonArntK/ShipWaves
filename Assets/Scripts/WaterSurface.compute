@@ -41,7 +41,7 @@ float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
     float elevation = 0.0;
     for (int i = 0; i < _NumVessels; i++)
     {
-        elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, vgs, vps);
+        elevation += ComputeShipWaveElevationGlobal(v.position.x, v.position.z, i, vgs, vps, false);
         elevation += ComputeWallReflection(v.position.x, v.position.z, i, vgs, vps);
     }
     return elevation * 3.0; // Multiplied by 3 to make the elevation more visible. Should be removed.
