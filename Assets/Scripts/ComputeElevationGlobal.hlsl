@@ -7,7 +7,7 @@
 #include "ComputeElevationLocalFiniteWater.hlsl"
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
-#include "./Wall Reflection/WallReflectionFunctions.hlsl"
+#include "./WallReflection/WallReflectionFunctions.hlsl"
 
 
 float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps, bool isWallReflection)
@@ -42,7 +42,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
         if ((!IsFiniteWater(fnh) && IsPointInRegionDeepWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex])) ||
             (IsFiniteWater(fnh) && IsPointInRegionFiniteWater(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y, U, t, vps.time[refIndex], vps.heading[refIndex], fnh)))
         {
-            if (!isWallReflection || (isWallReflection && isWallReflectionValid(X, Z, vps.coord[refIndex].x, vps.coord[refIndex].y))) // If it is not a wall reflection
+            if (!isWallReflection || (isWallReflection && isWallReflectionValid(float2(X, Z), float2(vps.coord[refIndex].x, vps.coord[refIndex].y)))) // If it is not a wall reflection
             {
                 index = i;
                 flag = true;
@@ -73,7 +73,7 @@ float ComputeShipWaveElevationGlobal(float X, float Z, int vesselNum, VesselGeom
             y = ComputeShipWaveElevationLocalDeepWater(x, z, vesselNum, vgs, U);
         }
         
-        return y;
+        return 0.5; //y;
     }
     else
     {

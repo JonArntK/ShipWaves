@@ -24,7 +24,7 @@ float2 ReflectPointOverWall(float2 P, float2 wallStart, float2 wallEnd)
         float orthoLineIntercept = intercept(P, orthoLineSlope);
     
         // Locate where the original line intercepts the orthogonal line. The following vector from P to lineP 
-        // is by definition half the distance of the reflection.
+            // is by definition half the distance of the reflection.
         float linePx = (orthoLineIntercept - wallIntercept) / (wallSlope - orthoLineSlope);
         float linePy = wallSlope * linePx + wallIntercept;
         
@@ -33,19 +33,19 @@ float2 ReflectPointOverWall(float2 P, float2 wallStart, float2 wallEnd)
     }
 }
 
-bool isWallReflectionValid(float X, float Z, float vesselX, float vesselZ)
+bool isWallReflectionValid(float2 XZ, float2 vesselXZ)
 {
     // Define wall.
-    float2 wallStart = float2(-50.0, -50.0), wallEnd = float2(0, -50.0);
+    float2 wallStart = float2(-50.0, -30.0), wallEnd = float2(0, -30.0);
     
     // Compute the line corresponding to [wallStart, wallEnd] as a linear function 'y = ax + b'.
-    float wallSlope = (wallEnd.y - wallStart.y) / (wallEnd.x - wallStart.x);
-    float wallIntercept = wallEnd.y - wallSlope * wallEnd.x;
+    float wallSlope = slope(wallStart, wallEnd);
+    float wallIntercept = intercept(wallEnd, wallSlope);
     
     // We only want to compute the reflection if the point lineP is on the line, i.e.,
-    // not when the reflection is about an extended part of the original line.
-    float pointSlope = (vesselZ - Z) / (vesselX - X);
-    float pointIntercept = vesselZ - pointSlope * vesselX;
+        // not when the reflection is about an extended part of the original line.
+    float pointSlope = slope(vesselXZ, XZ);
+    float pointIntercept = intercept(vesselXZ, pointSlope);
     
     // Locate where the original line intercepts the orthogonal line. The following vector from P to lineP 
         // is by definition half the distance of the reflection.
@@ -59,4 +59,5 @@ bool isWallReflectionValid(float X, float Z, float vesselX, float vesselZ)
     }
     return true;
 }
+
 #endif // __WALLREFLECTIONFUNCTIONS_HLSL__

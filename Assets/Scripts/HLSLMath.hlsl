@@ -34,7 +34,6 @@ float CustomTanh(float x)
     }
 }
 
-
 float slope(float2 p1, float2 p2)
 {
     // Returns the slope computed from points p1 and p2 (slope 'a', where 'y = ax + b').

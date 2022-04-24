@@ -2,11 +2,13 @@
 
 #include "FiniteWaterDispersionRelation.hlsl"   // For testing
 
-#include "ComputeElevationGlobal.hlsl"
+
 #include "GenerateMesh.hlsl"
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
 #include "WallReflection.hlsl"
+#include "ComputeElevationGlobal.hlsl"     // Needs to be included after "WallReflection.hlsl", but why?
+    
 
 #define GROUP_SIZE_X 64
 #define GROUP_SIZE_Y 1
