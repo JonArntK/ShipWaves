@@ -4,17 +4,24 @@
 #include "ComputeElevationGlobal.hlsl"
 #include "VesselGeometryStruct.hlsl"
 #include "VesselPathStruct.hlsl"
-#include "./WallReflection/WallReflectionFunctions.hlsl"
+#include "WallReflectionFunctions.hlsl"
 
-float ComputeWallReflection(float X, float Z, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps)
+float ComputeWallReflection(float2 XZ, int vesselNum, VesselGeometryStruct vgs, VesselPathStruct vps, StructuredBuffer<float4> walls, int numWalls)
 {
-    // Define wall.
-    float2 wallStart = float2(-50.0, -30.0), wallEnd = float2(0, -30.0);    
+    // Initialize elevation as 0.
+    float elevation = 0;
     
-    // Compute point reflected about wall.
-    float2 reflectedPoint = ReflectPointOverWall(float2(X, Z), wallStart, wallEnd);
+    // Add contribution from wall reflection from all walls.
+    for (int i = 0; i < numWalls; i++)
+    {
+        // Compute point reflected about wall.
+        float2 reflectedPoint = ReflectPointOverWall(XZ, walls[i].xy, walls[i].zw);
     
-    float elevation = ComputeShipWaveElevationGlobal(reflectedPoint.x, reflectedPoint.y, vesselNum, vgs, vps, true);
+        // Compute elevation as if the reflected point was the point of interest. This will give the mirroring effect.
+        elevation += ComputeShipWaveElevationGlobal(reflectedPoint, vesselNum, vgs, vps, true, walls, i, numWalls);
+    }
+    
+    // Return the elevation.
     return elevation;
 }
 

@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class GPUWaterSurface : MonoBehaviour
 {
+    // Mesh properties.
     public int xSize, zSize, xOrigin, zOrigin;
     public float xStep, zStep;
     public int xQuadCount, zQuadCount, QuadCount, TriangleCount;    // These should not be public, but want them visible in the inspector as of now.
@@ -20,15 +21,23 @@ public class GPUWaterSurface : MonoBehaviour
     [SerializeField] Shader WaterSurfaceShader;
     [SerializeField] Texture2D WaterSurfaceTexture;
 
+    // Vessel properties, including vessel geometry and vessel path.
     [SerializeField] GameObject[] vesselGOs;
     private Vessel[] vessels;
     private ComputeBuffer vesselCoord, vesselPathCoord, vesselPathTime, vesselPathHeading, vesselPathDepth;
     private float time, vesselPathDeltaTime = 0.01f;
 
+    // Points of stationary phase for use in computation of ship waves in finite water depth.
     [SerializeField] ComputeShader StationaryPointsCS;
     private ComputeBuffer finiteWaterStationaryPoints;
 
+    // Wall properties.
+    private Wall walls;
+    private ComputeBuffer wallsCB;
+
+    // Test, TO BE REMOVED!
     private ComputeBuffer Test;
+
 
     static readonly int
         vesselCoordId = Shader.PropertyToID("_VesselCoord"),
@@ -41,6 +50,7 @@ public class GPUWaterSurface : MonoBehaviour
 
     private void Update()
     {
+        // Define mesh properties according to used-specified size and step.
         xQuadCount = Mathf.RoundToInt((float)xSize / xStep);        // Number of quads in x-direction.
         zQuadCount = Mathf.RoundToInt((float)zSize / zStep);        // Number of quads in z-direction.
         xStep = (float)xSize / (float)xQuadCount;   // Updated xStep to ensure xSize is as defined.
@@ -146,6 +156,9 @@ public class GPUWaterSurface : MonoBehaviour
         vesselPathHeading = null;
         vesselPathDepth = null;
 
+        wallsCB.Release();
+        walls = null;
+
         //finiteWaterStationaryPoints.Release();
         //finiteWaterStationaryPoints = null;
     }
@@ -182,7 +195,6 @@ public class GPUWaterSurface : MonoBehaviour
             float[] vesselPathHeadingArray = vesselPathHeadingQueue.ToArray();
             float[] vesselPathDepthArray = vesselPathDepthQueue.ToArray();
 
-
             vesselPathCoord.SetData(vesselPathCoordArray, 0, i * vesselPathLength, vesselPathLength);
             vesselPathTime.SetData(vesselPathTimeArray, 0, i * vesselPathLength, vesselPathLength);
             vesselPathHeading.SetData(vesselPathHeadingArray, 0, i * vesselPathLength, vesselPathLength);
@@ -199,6 +211,9 @@ public class GPUWaterSurface : MonoBehaviour
     private void Start()
     {
         SetVessel();
+
+        walls = new Wall();
+        wallsCB = walls.setWallsToCS(WaterSurfaceCS, 0, "_Walls");
 
         //ComputeFiniteWaterStationaryPoints();
     }
@@ -269,17 +284,17 @@ public class GPUWaterSurface : MonoBehaviour
 
     private void TestFunctionSetup()
     {
-        int N = 10;
+        int N = 2;
 
-        Test = new ComputeBuffer(N, 2 * sizeof(double));
+        Test = new ComputeBuffer(N, 2 * sizeof(float));
 
         WaterSurfaceCS.SetBuffer(0, testId, Test);
     }
     private void TestFunctionRead()
     {
-        int N = 10;
+        int N = 2;
 
-        double2[] test = new double2[N];
+        float2[] test = new float2[N];
 
         Test.GetData(test);        
         float a = 2f;

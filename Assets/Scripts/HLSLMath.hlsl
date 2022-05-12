@@ -8,7 +8,7 @@
 // Check if two numbers are equal.
 bool IsClose(float a, float b)
 {
-    float eps = 1e-8;
+    float eps = 1e-7;
     if (abs(a - b) < eps)
     {
         return true;
@@ -44,6 +44,41 @@ float intercept(float2 p1, float slope)
 {
     // Returns the intercept computed from point p1 and its slope (intercept 'b', where 'y = ax + b').
     return p1.y - slope * p1.x;
+}
+
+float2 intersection(float2 p11, float2 p12, float2 p21, float2 p22)
+{
+    // Returns the intersection of the lines defined by the projections 'p11 - p12' and 'p21 - p22'.
+    // Does not consider the interval limits.
+    float px, py;
+    
+    // Compute the line corresponding to [p11, p12] as a linear function 'y = ax + b'.
+    float line1Slope = slope(p11, p12);
+    float line1Intercept = intercept(p12, line1Slope);
+    
+    float line2Slope = slope(p21, p22);
+    float line2Intercept = intercept(p21, line2Slope);
+    
+    
+    if (p11.x == p12.x)         // If slope of [p11, p12] is inifite (vertical line)
+    {
+        px = p11.x;
+        py = line2Slope * px + line2Intercept;
+    }
+    else if (p21.x == p22.x)    // If slope of [p21, p22] is inifite (vertical line)
+    {
+        px = p21.x;
+        py = line1Slope * px + line1Intercept;
+    }
+    else
+    {
+        // Locate where the original line intercepts the orthogonal line. The following vector from P to lineP 
+        // is by definition half the distance of the reflection.
+        px = (line2Intercept - line1Intercept) / (line1Slope - line2Slope);
+        py = line1Slope * px + line1Intercept;
+    }
+    
+    return float2(px, py);
 }
 
 float Mod(float x, float y)
