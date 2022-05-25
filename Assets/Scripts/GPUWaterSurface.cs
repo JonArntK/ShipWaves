@@ -111,8 +111,6 @@ public class GPUWaterSurface : MonoBehaviour
 
         UpdateVesselPath();
 
-
-        //SetVessel();
         TestFunctionSetup();
 
         WaterSurfaceCS.Dispatch(0, (QuadCount + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
@@ -159,8 +157,8 @@ public class GPUWaterSurface : MonoBehaviour
         wallsCB.Release();
         walls = null;
 
-        //finiteWaterStationaryPoints.Release();
-        //finiteWaterStationaryPoints = null;
+        finiteWaterStationaryPoints.Release();
+        finiteWaterStationaryPoints = null;
     }
 
     private void UpdateVesselPath()
@@ -215,7 +213,7 @@ public class GPUWaterSurface : MonoBehaviour
         walls = new Wall();
         wallsCB = walls.setWallsToCS(WaterSurfaceCS, 0, "_Walls");
 
-        //ComputeFiniteWaterStationaryPoints();
+        ComputeFiniteWaterStationaryPoints();
     }
 
     private void SetVessel()
@@ -250,13 +248,13 @@ public class GPUWaterSurface : MonoBehaviour
 
     private void ComputeFiniteWaterStationaryPoints()
     {
-        float2 fnhInterval = new float2(0.4f, 2f);    // Deep water for Fnh < 0.4. Shallow water for Fnh > 2.0.
-        float2 hInterval = new float2(2f, 108f);    // Assuming U_max == 13 m/s ~= 25 knop -> h_max becomes 108 m for Fnh = 0.4.
-        float2 alphaInterval = new float2(0, MathF.PI / 2f);
+        float2 fnhInterval = new float2(0.4f, 1.6f);    // Deep water for Fnh < 0.4. Shallow water for Fnh > 2.0.
+        float2 hInterval = new float2(1f, 60f);    // Assuming U_max == 13 m/s ~= 25 knop -> h_max becomes 108 m for Fnh = 0.4.
+        float2 alphaInterval = new float2(0, MathF.PI * 0.5f);
 
-        float fnhStep = 0.1f;
+        float fnhStep = 0.01f;
         float hStep = 1f;
-        float alphaStep = MathF.PI / 180f / 100f;
+        float alphaStep = MathF.PI / 180f / 8f;
 
         int fnhSize = (int)((fnhInterval.y - fnhInterval.x) / fnhStep);
         int hSize = (int)((hInterval.y - hInterval.x) / hStep);
@@ -274,7 +272,7 @@ public class GPUWaterSurface : MonoBehaviour
         StationaryPointsCS.SetFloats("_AlphaInfo", alphaInterval.x, alphaInterval.y, alphaStep, (float)alphaSize);
         StationaryPointsCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
 
-        StationaryPointsCS.Dispatch(0, (fnhSize * hSize * alphaSize + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
+        StationaryPointsCS.Dispatch(0, (fnhSize * hSize * alphaSize + 128 - 1) / 128, 1, 1);    // Executes the compute shader.
 
         WaterSurfaceCS.SetFloats("_FnhInfo", fnhInterval.x, fnhInterval.y, fnhStep, (float)fnhSize);
         WaterSurfaceCS.SetFloats("_HInfo", hInterval.x, hInterval.y, hStep, (float)hSize);

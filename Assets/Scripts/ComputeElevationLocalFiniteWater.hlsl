@@ -10,100 +10,108 @@
 
 
 
-double2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, double theta, double U, double fnh)
+float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U, float fnh)
 {
-    double h = (double) pow(U / fnh, 2.0) / g;
+    // Computes the complex amplitude function for a vessel on a straight path in finite water depth
+    
+    float h = (float) pow(U / fnh, 2.0) / g;
 
     int vesselNx = vgs.vesselNxNy[0];
     int vesselNy = vgs.vesselNxNy[1];
 
     int vesselCoordIndexStart = vesselNum * vesselNx * vesselNy;
 
-    double dx = vgs.coord[vesselCoordIndexStart + vesselNy].x - vgs.coord[vesselCoordIndexStart + 0].x;
-    double dy = abs(vgs.coord[vesselCoordIndexStart + 1].y - vgs.coord[vesselCoordIndexStart + 0].y);
+    float dx = vgs.coord[vesselCoordIndexStart + vesselNy].x - vgs.coord[vesselCoordIndexStart + 0].x;
+    float dy = abs(vgs.coord[vesselCoordIndexStart + 1].y - vgs.coord[vesselCoordIndexStart + 0].y);
 
-    double k = FiniteWaterDispersionRelation(fnh, h, theta);
-    double k0 = g / (double) pow(U, 2.0);
+    float k = FiniteWaterDispersionRelation(fnh, h, theta);
+    float k0 = g / (float) pow(U, 2.0);
 
-    double P = 0.0;
-    double Q = 0.0;
+    float P = 0.0;
+    float Q = 0.0;
 
-    double K = k * dy;
-    double omega0 = ((double) exp(K) - (double) 1.0 - K) / (double) pow(K, 2.0);
-    double omegaNy = ((double) exp(-K) - (double) 1.0 + K) / (double) pow(K, 2.0);
-    double omegaJ = ((double) exp(K) + (double) exp(-K) - 2.0) / (double) pow(K, 2.0);
+    float K = k * dy;
+    float omega0 = ((float) exp(K) - (float) 1.0 - K) / (float) pow(K, 2.0);
+    float omegaNy = ((float) exp(-K) - (float) 1.0 + K) / (float) pow(K, 2.0);
+    float omegaJ = ((float) exp(K) + (float) exp(-K) - 2.0) / (float) pow(K, 2.0);
 
-    double K2 = k * (double) cos(theta) * dx;
-    double omegaEven = (3.0 * K2 + K2 * (double) cos(2.0 * K2) - 2.0 * (double) sin(2.0 * K2)) / (double) pow(K2, 3.0);
-    double omegaOdd = 4.0 * ((double) sin(K2) - K2 * (double) cos(K2)) / (double) pow(K2, 3.0);
+    float K2 = k * (float) cos(theta) * dx;
+    float omegaEven = (3.0 * K2 + K2 * (float) cos(2.0 * K2) - 2.0 * (float) sin(2.0 * K2)) / (float) pow(K2, 3.0);
+    float omegaOdd = 4.0 * ((float) sin(K2) - K2 * (float) cos(K2)) / (float) pow(K2, 3.0);
 
     for (int i = 0; i < vesselNx; i++)
     {
         int refIndex = vesselCoordIndexStart + i * vesselNy;
 
-        double F = 0.0;
-        F += omega0 * vgs.coord[refIndex + vesselNy - 1].z * (double) cosh(k * (vgs.coord[refIndex + vesselNy - 1].y + h)) / (double) cosh(k * h) * dy;
-        F += omegaNy * vgs.coord[refIndex + 0].z * (double) cosh(k * (vgs.coord[refIndex + 0].y + h)) / cosh(k * h) * dy;
+        float F = 0.0;
+        F += omega0 * vgs.coord[refIndex + vesselNy - 1].z * (float) cosh(k * (vgs.coord[refIndex + vesselNy - 1].y + h)) / (float) cosh(k * h) * dy;
+        F += omegaNy * vgs.coord[refIndex + 0].z * (float) cosh(k * (vgs.coord[refIndex + 0].y + h)) / cosh(k * h) * dy;
         for (int j = 1; j < vesselNy - 1; j++)
         {
-            F += omegaJ * vgs.coord[refIndex + j].z * (double) cosh(k * (vgs.coord[refIndex + j].y + h)) / cosh(k * h) * dy;
+            F += omegaJ * vgs.coord[refIndex + j].z * (float) cosh(k * (vgs.coord[refIndex + j].y + h)) / cosh(k * h) * dy;
         }
 
         if (Mod(i, 2) == 0.0)
         {
-            P += omegaEven * F * (double) cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
-            Q += omegaEven * F * (double) sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            P += omegaEven * F * (float) cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            Q += omegaEven * F * (float) sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
         }
         else
         {
-            P += omegaOdd * F * (double) cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
-            Q += omegaOdd * F * (double) sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            P += omegaOdd * F * (float) cos(k * vgs.coord[refIndex].x * cos(theta)) * dx;
+            Q += omegaOdd * F * (float) sin(k * vgs.coord[refIndex].x * cos(theta)) * dx;
         }
     }
     
-    double2 amp = double2(0.0, -2.0 / PI * (double) pow(k, 2.0) / (1.0 - k0 * h * (double) pow(1 / cos(theta), 2.0) * (double) pow(1.0 / cosh(k * h), 2.0)));
-    return c_mul(amp, double2(P, Q));
+    float2 amp = float2(0.0, -2.0 / PI * (float) pow(k, 2.0) / (1.0 - k0 * h * (float) pow(1 / cos(theta), 2.0) * (float) pow(1.0 / cosh(k * h), 2.0)));
+    return c_mul(amp, float2(P, Q));
 }
-double ComputeShipWaveElevationLocalFiniteWater(double x, double z, int vesselNum, VesselGeometryStruct vgs, double U, double h, VesselPathStruct vps)
+float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, VesselGeometryStruct vgs, float U, float h, VesselPathStruct vps)
 {
-    double fnh = Fnh(U, h);
+    float fnh = Fnh(U, h);
 
     // Compute polar coordinate equivalent to (x, z).
-    double r = sqrt(pow(x, 2.0) + pow(z, 2.0));
-    double alpha = atan2(z, x);
+    float r = sqrt(pow(x, 2.0) + pow(z, 2.0));
+    float alpha = atan2(z, x);
     alpha = abs(alpha); // Solution is symmetric about the x-axis.
 
     // If alpha is above the Kelvin half angle, the wave elevation is zero.
-    double deltaBoundary = 0.02; // To avoid singularities at boundary.
+    float deltaBoundary = 0.02; // To avoid singularities at boundary.
 
     if (alpha >= PI * 0.5 - deltaBoundary)     // No elevation is present ahead of the vessel.
     {
-        return double(0.0);
+        return float(0.0);
     }
     
-    double2 theta = GetPointsOfStationaryPhaseFiniteWater(double2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
+    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
+    //float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // 
+    //if (theta.x < 0.0 && theta22.x < 0.0 && abs(theta.x - theta22.x) > 0.1)
+    //    return 1.0;
+    //else
+    //    return 0.0;
 
-    if (theta.x > 0.0 || theta.y > 0.0)
-    {
-        return 2.0;
-    }
-
+    
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
-    double2 A1 = double2(0.0, 0.0), temp1 = double2(0.0, 0.0);
+    float2 A1 = float2(0.0, 0.0), temp1 = float2(0.0, 0.0);
     if (fnh < 1.0)  // Only compute amplitude for the transverse waves when at subcritical depth Froude number.
     {
-        A1 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.x, U, fnh); // double2 since complex -> double2(real, imaginary)
-        A1.x *= (double) sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
-        A1.y *= (double) sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
-        temp1 = c_mul(A1, c_exp(double2(0.0, r * G(theta.x, fnh, h, alpha) + PI / 4.0)));
+        A1 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.x, U, fnh); // float2 since complex -> float2(real, imaginary)
+        A1.x *= (float) sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        A1.y *= (float) sqrt(2.0 * PI / (r * abs(ddG(theta.x, fnh, h, alpha))));
+        temp1 = c_mul(A1, c_exp(float2(0.0, r * G(theta.x, fnh, h, alpha) + PI / 4.0)));
     }
-    double2 A2 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.y, U, fnh); // double2 since complex -> double2(real, imaginary)
-    A2.x *= (double) sqrt(2.0 * PI / (r * abs(ddG(theta.y, fnh, h, alpha))));
-    A2.y *= (double) sqrt(2.0 * PI / (r * abs(ddG(theta.y, fnh, h, alpha))));
-    double2 temp2 = c_mul(A2, c_exp(double2(0.0, r * G(theta.y, fnh, h, alpha) - PI / 4.0)));
+    float2 A2 = ComplexAmplitudeFunctionFiniteWater(vesselNum, vgs, theta.y, U, fnh); // float2 since complex -> float2(real, imaginary)
+    A2.x *= (float) sqrt(2.0 * PI / (r * abs(ddG(theta.y, fnh, h, alpha))));
+    A2.y *= (float) sqrt(2.0 * PI / (r * abs(ddG(theta.y, fnh, h, alpha))));
+    float2 temp2 = c_mul(A2, c_exp(float2(0.0, r * G(theta.y, fnh, h, alpha) - PI / 4.0)));
     
+    // Check for singularities or NaN and remove if present.
+    if (isnan(temp1.x) || isinf(temp1.x))
+        temp1.x = 0.0;
+    else if ((isnan(temp2.x) || isinf(temp2.x)))
+        temp2.x = 0.0;
     
-    double zeta = temp2.x; // + temp2.x;  // Want the real part of the elevation. 
+    float zeta = temp1.x + temp2.x; // Want the real part of the elevation. 
     return zeta;
 }
 

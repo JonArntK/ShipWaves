@@ -4,7 +4,7 @@
 #include "HLSLMath.hlsl"
 #include "StationaryPhaseFiniteWater.hlsl"
 
-#define GROUP_SIZE_X 64
+#define GROUP_SIZE_X 128
 #define GROUP_SIZE_Y 1
 #define GROUP_SIZE_Z 1
 
@@ -33,7 +33,7 @@ void ComputeStationaryPointsKernel(uint3 threadID : SV_DispatchThreadID)
 
     float3 params = GetParams(id);
     
-    float2 thetaStationary = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.001, 0.1),
+    float2 thetaStationary = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00),
         params.x, params.y, params.z);
 
     _FiniteWaterStationaryPoints[id] = thetaStationary;
