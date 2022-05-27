@@ -13,7 +13,7 @@
 float GetVelocity(VesselPathStruct vps, int index)
 {
     // U = dS / dt, i.e., distance divided by time.
-    float U = sqrt(pow(vps.coord[index].x - vps.coord[index + 1].x, 2) + pow(vps.coord[index].y - vps.coord[index].y, 2))
+    float U = sqrt(pow(vps.coord[index].x - vps.coord[index + 1].x, 2) + pow(vps.coord[index].y - vps.coord[index + 1].y, 2))
         / abs(vps.time[index] - vps.time[index + 1]);
     return U;
 }

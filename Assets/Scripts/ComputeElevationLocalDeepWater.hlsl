@@ -68,11 +68,11 @@ float ComputeShipWaveElevationLocalDeepWater(float x, float z, int vesselNum, Ve
     alpha = abs(alpha);     // Solution is symmetric about the x-axis.
 
     // If alpha is above the Kelvin half angle, the wave elevation is zero.
-    float deltaBoundary = 0.02;        // To avoid singularities at boundary equal to Kelvin angle.
+    float deltaBoundary = 0.01;        // To avoid singularities at boundary equal to Kelvin angle.
     
     if (alpha >= KELVIN_ANGLE - deltaBoundary)     // In deep water, no elevation is assumed outside the Kelvin angle.
     {
-        return float(0.0);
+        alpha = KELVIN_ANGLE - deltaBoundary;
     }
     
     // For the method of stationary phase, dG/dtheta gives two solutions within the interval [-PI/2, PI/2] for theta.

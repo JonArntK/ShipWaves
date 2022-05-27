@@ -35,7 +35,7 @@ public class Vessel : MonoBehaviour
 
     private void Update()
     {
-        if (this.transform.position.x <= -50f)
+        if (this.transform.position.x <= -45f)
         {
             return;
         }
@@ -45,7 +45,7 @@ public class Vessel : MonoBehaviour
             U += 1f * Time.deltaTime;
 
         if (Input.GetKey(KeyCode.DownArrow))
-            U -= 1f * Time.deltaTime;
+            U -= 0.4f * Time.deltaTime;
 
         // Move.
         this.transform.Translate(Vector3.forward * Time.deltaTime * U);
@@ -109,7 +109,7 @@ public class Vessel : MonoBehaviour
     }
     public void UpdateVesselPath()
     {
-        if (this.transform.position.x <= -50f)
+        if (this.transform.position.x <= -45f)
         {
             return;
         }

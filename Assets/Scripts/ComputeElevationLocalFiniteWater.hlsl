@@ -83,8 +83,8 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
         return float(0.0);
     }
     
-    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
-    //float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // 
+    //float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
+    float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // 
     //if (theta.x < 0.0 && theta22.x < 0.0 && abs(theta.x - theta22.x) > 0.1)
     //    return 1.0;
     //else
