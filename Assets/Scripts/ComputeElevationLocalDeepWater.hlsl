@@ -104,8 +104,13 @@ float ComputeShipWaveElevationLocalDeepWater(float x, float z, int vesselNum, Ve
     A2.x *= pow(abs(cos(theta.y)), 3.0 / 2.0);
     A2.y *= pow(abs(cos(theta.y)), 3.0 / 2.0);
     float2 temp2 = c_mul(A2, c_exp(float2(0.0, k0 * r * cos(theta.y - alpha) / pow(cos(theta.y), 2.0) - PI / 4.0)));
+
+    // Include viscous correction factor
+    float nu = 0.0002;
+    float v1 = exp(-4.0 * pow(k0, 2.0) / U * nu / pow(cos(theta.x), 4.0) * (x + z * tan(theta.x)));
+    float v2 = exp(-4.0 * pow(k0, 2.0) / U * nu / pow(cos(theta.y), 4.0) * (x + z * tan(theta.y)));
     
-    float zeta = amp * (temp1.x + temp2.x);     // Want the real part of the elevation.
+    float zeta = amp * (v1 * temp1.x + v2 * temp2.x);     // Want the real part of the elevation.
     return zeta;
 }
 

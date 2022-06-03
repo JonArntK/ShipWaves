@@ -158,7 +158,7 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
     StoreTriangle(idx1, idx2, idx3, v1, v3, v2, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
     StoreTriangle(idx4, idx5, idx6, v2, v3, v6, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
     
-    test(vesselPathInfo);
+    //test(vesselPathInfo);
 
 }
 

@@ -35,7 +35,7 @@ public class Vessel : MonoBehaviour
 
     private void Update()
     {
-        if (this.transform.position.x <= -45f)
+        if (this.transform.position.x <= 0f && this.transform.position.z <= -25f)
         {
             return;
         }
@@ -46,13 +46,13 @@ public class Vessel : MonoBehaviour
 
         if (Input.GetKey(KeyCode.DownArrow))
             U -= 0.4f * Time.deltaTime;
-
+        
         // Move.
         this.transform.Translate(Vector3.forward * Time.deltaTime * U);
 
         // Rotate when pressing left or right arrow.
-        if (Input.GetKey(KeyCode.LeftArrow))
-            this.transform.Rotate(Vector3.up, -1);
+        if (Input.GetKey(KeyCode.LeftArrow) || (this.transform.position.z > -25f))
+            this.transform.Rotate(Vector3.up, -0.4f);
 
         if (Input.GetKey(KeyCode.RightArrow))
             this.transform.Rotate(Vector3.up, 1);
@@ -109,7 +109,7 @@ public class Vessel : MonoBehaviour
     }
     public void UpdateVesselPath()
     {
-        if (this.transform.position.x <= -45f)
+        if (this.transform.position.x <= -40f && this.transform.position.z <= -25f)
         {
             return;
         }
