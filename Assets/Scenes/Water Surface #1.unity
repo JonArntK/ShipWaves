@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 262.38354, g: 325.1084, b: 430.30957, a: 1}
+  m_IndirectSpecularColor: {r: 261.8028, g: 324.33075, b: 429.2505, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1598,7 +1598,7 @@ MonoBehaviour:
     type: 3}
   WaterSurfaceTexture: {fileID: 0}
   vesselGOs:
-  - {fileID: 1083512850}
+  - {fileID: 1942297404}
   StationaryPointsCS: {fileID: 7200000, guid: 3b656bdc7d9b4184cbc4784a4a629930, type: 3}
 --- !u!1001 &1083512849
 PrefabInstance:
@@ -1710,7 +1710,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7894974908758283258, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
@@ -2515,7 +2515,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
@@ -2595,7 +2595,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7894974908758283258, guid: d27e1164d9c7c3c438ecd771f786c8dc,
         type: 3}
@@ -2625,7 +2625,7 @@ MonoBehaviour:
   Nx: 16
   Nz: 10
   U: 5.315
-  fnh: 0.2
+  fnh: 0.95
   fn: 0
 --- !u!1 &2069469536
 GameObject:
