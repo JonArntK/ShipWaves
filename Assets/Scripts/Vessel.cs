@@ -24,7 +24,7 @@ public class Vessel : MonoBehaviour
 
     private void Awake()
     {
-        L = 8f;
+        L = 3f;
         B = (0.75f / 8f) * L;
         D = (1f / 16f) * L;
 
@@ -35,7 +35,7 @@ public class Vessel : MonoBehaviour
 
     private void Update()
     {
-        if (this.transform.position.x <= -50f)// && this.transform.position.z <= -25f)
+        if (this.transform.position.x >= 39f)
         {
             return;
         }
@@ -51,8 +51,8 @@ public class Vessel : MonoBehaviour
         this.transform.Translate(Vector3.forward * Time.deltaTime * U);
 
         // Rotate when pressing left or right arrow.
-        if (Input.GetKey(KeyCode.LeftArrow)) //|| (this.transform.position.z > -25f))
-            this.transform.Rotate(Vector3.up, - Time.deltaTime * U / 25f);
+        if (Input.GetKey(KeyCode.LeftArrow))
+            this.transform.Rotate(Vector3.up, -1);//- Time.deltaTime * U / 25f * 180f / Mathf.PI);
 
         if (Input.GetKey(KeyCode.RightArrow))
             this.transform.Rotate(Vector3.up, 1);
@@ -86,7 +86,7 @@ public class Vessel : MonoBehaviour
                 float x = -L / 2f + i * dx;
                 float z = j * dz;
                 float y = B / 2f * (1 - Mathf.Pow(z / D, 2)) * (1 - Mathf.Pow(x / (0.5f * L), 2));
-                vesselCoord[Nz * i + j] = new float3(x, -z, y);   // Note difference between coordinate system in Unity and defintion. CHANGE THIS LATER!
+                vesselCoord[Nz * i + j] = new float3(x, -z, y);   // Note difference between coordinate system in Unity and defintion.
             }
         }
     }
@@ -109,7 +109,7 @@ public class Vessel : MonoBehaviour
     }
     public void UpdateVesselPath()
     {
-        if (this.transform.position.x <= -50f)// && this.transform.position.z <= -25f)
+        if (this.transform.position.x >= 39f)
         {
             return;
         }

@@ -5,9 +5,13 @@ using Unity.Mathematics;
 
 public class Wall
 {
+    // Example wall setup
+    //private float4[] walls = new float4[4] { new float4(0f, 10f, 500f, 10f),
+    //                                         new float4(0f, -10f, 500f, -10f),
+    //                                         new float4(0f, 10f, 0f, 40f),
+    //                                         new float4(0f, -10f, 0f, -40f), };
 
-    //private float4[] walls = new float4[2] { new float4(0f, 3f, 50f, 3f),
-    //                                         new float4(0f, -3f, 50f, -3f) };
+    //Used as default when no walls are wanted, as it is currently not possible to have no walls at all.
     private float4[] walls = new float4[1] { new float4(1000f, 1000f, 1001f, 1001f) };
 
 
