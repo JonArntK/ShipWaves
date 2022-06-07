@@ -85,10 +85,6 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     
     //float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
     float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // 
-    //if (theta.x < 0.0 && theta22.x < 0.0 && abs(theta.x - theta22.x) > 0.1)
-    //    return 1.0;
-    //else
-    //    return 0.0;
 
     
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
@@ -111,7 +107,17 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     else if ((isnan(temp2.x) || isinf(temp2.x)))
         temp2.x = 0.0;
     
-    float zeta = temp1.x + temp2.x; // Want the real part of the elevation. 
+    // Include viscous correction factor.
+    float nu = 0.0002;
+    
+    float k1 = FiniteWaterDispersionRelation(fnh, h, theta.x);
+    float v1 = exp(-4.0 * nu * U * pow(k1, 3) * cos(theta.x) * (x + z * tan(theta.x)));
+    
+    float k2 = FiniteWaterDispersionRelation(fnh, h, theta.y);
+    float v2 = exp(-4.0 * nu * U * pow(k2, 3) * cos(theta.y) * (x + z * tan(theta.y)));
+    
+    
+    float zeta = v1 * temp1.x + v2 * temp2.x; // Want the real part of the elevation. 
     return zeta;
 }
 
