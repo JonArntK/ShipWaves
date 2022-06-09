@@ -1,8 +1,5 @@
 #pragma kernel ComputeWaterSurfaceKernel
 
-#include "FiniteWaterDispersionRelation.hlsl"   // For testing
-#include "TestSinWave.hlsl" // For testing
-
 #include "ComputeElevationGlobal.hlsl"
 #include "GenerateMesh.hlsl"
 #include "VesselGeometryStruct.hlsl"
@@ -17,8 +14,6 @@
 RWByteAddressBuffer _VertexBuffer;
 RWByteAddressBuffer _NormalBuffer;
 RWByteAddressBuffer _TexcoordBuffer;
-
-RWStructuredBuffer<float2> _Test;  // TO BE REMOVED!
 
 // Mesh properties.
 int _QuadCount, _XQuadCount, _ZQuadCount, _XOrigin, _ZOrigin;
@@ -47,67 +42,18 @@ int _NumWalls;
 
 float ComputeElevation(Vertex v, VesselGeometryStruct vgs, VesselPathStruct vps)
 {
-    float elevation = 0.0;
-    for (int i = 0; i < _NumVessels; i++)
+    // Compute wave elevation.
+    
+    float elevation = 0.0;  // Initialize wave elevation.
+    for (int i = 0; i < _NumVessels; i++)   // For each vessel.
     {
-        elevation += ComputeShipWaveElevationGlobal(v.position.xz, i, vgs, vps, false, _Walls, 0, _NumWalls);
-        elevation += ComputeWallReflection(v.position.xz, i, vgs, vps, _Walls, _NumWalls);
-        
-        float2 source = float2(-1000, -1000);
-        //elevation += ComputeShipElevationGlobalSinWave(v.position.xz, source, false, _Walls, _NumWalls, 0, 0);
-        //elevation += ComputeWallReflectionSinWave(v.position.xz, source, _Walls, _NumWalls, 0, 0);
-
+        elevation += ComputeShipWaveElevationGlobal(v.position.xz, i, vgs, vps, false, _Walls, 0, _NumWalls);   // Add contribution before reflection from walls.
+        elevation += ComputeWallReflection(v.position.xz, i, vgs, vps, _Walls, _NumWalls);  // Add contribution after reflection from walls.
     }
-    return elevation;
+    // Return total elevation.
+    return elevation;  
 }
 
-void test(VesselPathStruct vps)
-{
-    float fnh = 0.95;
-    float fn = 0.677;
-    float U = fn * sqrt(9.81 * 8.0);
-    float h = pow(U / fnh, 2.0) / 9.81;
-    
-    float alpha = 0; 
-    
-    //for (int i = 0; i < 20; i++)
-    //{
-    //    alpha += PI * 0.5 / 20;
-        
-    //    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha);
-    //    float2 theta2 = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha);
-        
-    //    if (abs(theta.x - theta2.x) > 0.1)
-    //    {
-    //        int fnhIndex = GetIndex(fnh, vps.fnhInfo);
-    //        int hIndex = GetIndex(h, vps.hInfo);
-    //        int alphaIndex = GetIndex(alpha, vps.alphaInfo);
-            
-    //        _Test[0] = float2(abs(theta.x - theta2.x), fnh);
-    //        _Test[1] = float2(h, alpha);
-    //    }
-    //}
-    
-    alpha = 0.7853982; //1.284829;
-    
-    float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha);
-    float2 theta2 = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha);
-        
-    int fnhIndex = GetIndex(fnh, vps.fnhInfo);
-    int hIndex = GetIndex(h, vps.hInfo);
-    int alphaIndex = GetIndex(alpha, vps.alphaInfo);
-
-    int index = Matrix3DTo1D(fnhIndex, hIndex, alphaIndex, vps.fnhInfo.w, vps.hInfo.w, vps.alphaInfo.w);
-    
-    int3 indices = Matrix1DTo3D(index, _FnhInfo.w, _HInfo.w, _AlphaInfo.w);
-    float fnh2 = _FnhInfo.x + indices.x * _FnhInfo.z;
-    float h2 = _HInfo.x + indices.y * _HInfo.z;
-    float alpha2 = _AlphaInfo.x + indices.z * _AlphaInfo.z;
-    
-    _Test[0] = float2(fnh2, h2); //theta;       // (1f, 1f)
-    _Test[1] = float2(alpha2, (float) index); //theta2;      // (-0.2848, -0.2868)
-    
-}
 
 [numthreads(GROUP_SIZE_X, GROUP_SIZE_Y, GROUP_SIZE_Z)]
 void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
@@ -157,8 +103,5 @@ void ComputeWaterSurfaceKernel(uint3 threadID : SV_DispatchThreadID)
 
     StoreTriangle(idx1, idx2, idx3, v1, v3, v2, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
     StoreTriangle(idx4, idx5, idx6, v2, v3, v6, _VertexBuffer, _NormalBuffer, _TexcoordBuffer);
-    
-    //test(vesselPathInfo);
-
 }
 

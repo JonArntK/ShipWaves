@@ -8,10 +8,12 @@
 
 float2 ComplexAmplitudeFunctionDeepWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U)
 {
+    // Compute the deep water complex amplitude function.
+    
     int vesselNx = vgs.vesselNxNy[0];
     int vesselNy = vgs.vesselNxNy[1];
 
-    int vesselCoordIndexStart = vesselNum * vesselNx * vesselNy;
+    int vesselCoordIndexStart = vesselNum * vesselNx * vesselNy;    // To ensure the correct vessel geometry coordinates are used.
 
     float dx = vgs.coord[vesselCoordIndexStart + vesselNy].x - vgs.coord[vesselCoordIndexStart + 0].x;
     float dy = abs(vgs.coord[vesselCoordIndexStart + 1].y - vgs.coord[vesselCoordIndexStart + 0].y);

@@ -30,6 +30,8 @@ float2 GetEllipseWidthHeight(float fnh, float rDeepWater)
 {
     // The ellipse width and height is defined relative to the radius of the corresponding circle for deep water.
     // The values in 'aa' and 'bb' are fitted to match the shape of the ellipse for Fnh in range [0.4, 1.0] and [1.0, 1.3].
+    // 
+    // This simplification reduces the necessary computational effort signficantly.
 
     float a, b; // Initialize.
     if (fnh <= 1.0)  // Valid for Fnh in [0.4, 1.0].
@@ -70,6 +72,7 @@ float4 GetEllipseGlobalFiniteWater(float XP, float ZP, float U, float t, float t
 
 bool IsPointInRegionFiniteWater(float X, float Z, float XP, float ZP, float U, float t, float tP, float heading, float fnh)
 {
+    // Get ellipse-shaped disk of disturbance for finite water in global coordinate system.
     float4 globalEllipse = GetEllipseGlobalFiniteWater(XP, ZP, U, t, tP, heading, fnh);
 
     float X0 = globalEllipse.x, Z0 = globalEllipse.y;

@@ -35,9 +35,6 @@ public class GPUWaterSurface : MonoBehaviour
     private Wall walls;
     private ComputeBuffer wallsCB;
 
-    // Test, TO BE REMOVED!
-    private ComputeBuffer Test;
-
 
     static readonly int
         vesselCoordId = Shader.PropertyToID("_VesselCoord"),
@@ -111,11 +108,9 @@ public class GPUWaterSurface : MonoBehaviour
 
         UpdateVesselPath();
 
-        TestFunctionSetup();
 
         WaterSurfaceCS.Dispatch(0, (QuadCount + 64 - 1) / 64, 1, 1);    // Executes the compute shader.
 
-        TestFunctionRead();
 
         vesselPathCoord.Release();
         vesselPathTime.Release();
@@ -279,23 +274,4 @@ public class GPUWaterSurface : MonoBehaviour
         WaterSurfaceCS.SetFloats("_AlphaInfo", alphaInterval.x, alphaInterval.y, alphaStep, (float)alphaSize);
         WaterSurfaceCS.SetBuffer(0, finiteWaterStationaryPointsId, finiteWaterStationaryPoints);
     }
-
-    private void TestFunctionSetup()
-    {
-        int N = 2;
-
-        Test = new ComputeBuffer(N, 2 * sizeof(float));
-
-        WaterSurfaceCS.SetBuffer(0, testId, Test);
-    }
-    private void TestFunctionRead()
-    {
-        int N = 2;
-
-        float2[] test = new float2[N];
-
-        Test.GetData(test);        
-        float a = 2f;
-    }
-
 }

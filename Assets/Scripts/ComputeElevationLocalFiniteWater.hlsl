@@ -12,7 +12,7 @@
 
 float2 ComplexAmplitudeFunctionFiniteWater(int vesselNum, VesselGeometryStruct vgs, float theta, float U, float fnh)
 {
-    // Computes the complex amplitude function for a vessel on a straight path in finite water depth
+    // Computes the complex amplitude function for a vessel on a straight path in finite water depth.
     
     float h = (float) pow(U / fnh, 2.0) / g;
 
@@ -84,7 +84,7 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     }
     
     float2 theta = GetPointsOfStationaryPhaseFiniteWaterBuffer(vps, fnh, h, alpha); // 
-    //float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // 
+    //float2 theta = GetPointsOfStationaryPhaseFiniteWater(float2(-PI * 0.5 + 0.02, 0.00), fnh, h, alpha); // Select this option to use precomputed values for the points of stationary phase.
 
     
     // Each theta has its own amplitude (transverse and divergent wave amplitude). Then compute wave elevation.
@@ -109,7 +109,6 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     
     // Include viscous correction factor.
     float nu = 0.0002;
-    
     float k1 = FiniteWaterDispersionRelation(fnh, h, theta.x);
     float v1 = exp(-4.0 * nu * U * pow(k1, 3) * cos(theta.x) * (x * cos(theta.x) + abs(z) * sin(theta.x)));
     
@@ -118,8 +117,6 @@ float ComputeShipWaveElevationLocalFiniteWater(float x, float z, int vesselNum, 
     
     
     float zeta = v1 * temp1.x + v2 * temp2.x; // Want the real part of the elevation. 
-    if (abs(zeta) > 0.5)
-        zeta = 0.0;
     return zeta;
 }
 

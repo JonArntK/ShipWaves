@@ -19,7 +19,7 @@ float FiniteWaterDispersionRelation(float fnh, float h, float theta)
 {
     // The dispersion relation is solved using Newton's method. Settings are:
     int max_iter = 50;
-    float epsilon = 1e-10;
+    float epsilon = 1e-7;
 
     // Initialize for use in Newton's method.
     float fxn, dfxn;

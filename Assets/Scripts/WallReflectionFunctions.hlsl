@@ -72,7 +72,6 @@ bool IsPointObstructedByWall(float2 XZ, float2 vesselXZ, StructuredBuffer<float4
         return true;
     }
     
-    
     float2 originalXZ = ReflectPointOverWall(XZ, walls[currentWall].xy, walls[currentWall].zw);
     
     

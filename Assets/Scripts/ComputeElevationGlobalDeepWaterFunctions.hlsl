@@ -4,6 +4,7 @@
 // Check if a point (x, z) is inside a circle with radius r and origo at (x0, z0).
 bool IsPointInCircle(float x, float z, float x0, float z0, float r)
 {
+    
     return pow(x - x0, 2) + pow(z - z0, 2) < pow(r, 2);
 }
 
@@ -21,8 +22,11 @@ float3 GetCircleGlobalDeepWater(float XP, float ZP, float U, float t, float tP, 
 
 bool IsPointInRegionDeepWater(float X, float Z, float XP, float ZP, float U, float t, float tP, float heading)
 {
+    // Get circular disk of disturbance for deep water in global coordinate system.
     float3 globalCircle = GetCircleGlobalDeepWater(XP, ZP, U, t, tP, heading);
     float X0 = globalCircle.x, Z0 = globalCircle.y, R = globalCircle.z;
+    
+    // Check if point is inside disk of disturbance.
     if (IsPointInCircle(X, Z, X0, Z0, R))
     {
         return true;
